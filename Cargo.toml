@@ -1,0 +1,8 @@
+[package]
+name = "modular_rogue"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = "1.0.229"
+typetag = "0.2.23"
