@@ -2,7 +2,7 @@ use std::{any::{Any, TypeId}, collections::HashMap, ops::{Deref, DerefMut}};
 
 use serde::{Deserialize, Serialize};
 
-use crate::event::event::Event;
+use crate::{component::dynamic_handlers::DynamicHandlers, event::event::Event};
 
 pub fn dispatch<C: Handles<E> + 'static, E: Event + 'static>(component: &mut dyn Component, event: &mut dyn Any) {
     let handler = (component as &mut dyn Any).downcast_mut::<C>().unwrap();
@@ -15,10 +15,7 @@ pub trait Handles<T: Event>: Component {
 }
 
 #[typetag::serde(tag = "type")]
-pub trait Component: Any {
-
-    fn get_handlers(&self) -> Vec<(TypeId, fn(&mut dyn Component, &mut dyn Any))>;
-
+pub trait Component: Any + DynamicHandlers {
     fn get_wanted_events(&self) -> Vec<TypeId> {
         self.get_handlers().iter()
             .map(|t| t.0)

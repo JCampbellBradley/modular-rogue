@@ -1,6 +1,5 @@
-use std::any::{Any, TypeId};
-
-use modular_rogue::{component::component::{Component, Handles, dispatch}, entity::entity::Entity, event::event::Event};
+use modular_rogue::{component::{component::{Component, Handles}}, entity::entity::Entity, event::event::Event};
+use modular_rogue_macros::DynamicHandlers;
 use serde::{Deserialize, Serialize};
 
 struct ConstEvent {
@@ -8,16 +7,13 @@ struct ConstEvent {
 }
 impl Event for ConstEvent {}
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, DynamicHandlers)]
+#[handles(ConstEvent)]
 struct ConstHandler {}
+
 #[typetag::serde]
-impl Component for ConstHandler {
-    fn get_handlers(&self) -> Vec<(std::any::TypeId, fn(&mut dyn Component, &mut dyn Any))> {
-        vec![
-            (TypeId::of::<ConstEvent>(), dispatch::<ConstHandler, ConstEvent>)
-        ]
-    }
-}
+impl Component for ConstHandler {}
+
 impl Handles<ConstEvent> for ConstHandler {
     fn handle(&mut self, e: &mut ConstEvent) {
         e.handled = true;

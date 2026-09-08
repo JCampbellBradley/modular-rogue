@@ -1,8 +1,10 @@
 [package]
-name = "modular_rogue"
+name = "modular-rogue"
 version = "0.1.0"
 edition = "2024"
+resolver = "2"
 
 [dependencies]
 serde = "1.0.229"
 typetag = "0.2.23"
+modular-rogue-macros = {path = "./modular-rogue-macros"}
