@@ -1,8 +1,26 @@
-use std::{any::{Any, TypeId}, collections::HashMap, ops::{Deref, DerefMut}};
+use std::any::{Any, TypeId};
 
-use serde::{Deserialize, Serialize};
+use derive_more::{Add, Eq, PartialEq, Sub};
 
 use crate::{component::dynamic_handlers::DynamicHandlers, event::event::Event};
+
+#[derive(Add, Sub, PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy)]
+pub struct Priority(i8);
+
+impl Priority {
+    const LOW: Priority                 = Priority(-64);
+    const LOWISH: Priority              = Priority(-32);
+    const DEFAULT: Priority             = Priority(0);
+    const HIGHISH: Priority             = Priority(32);
+    const HIGH: Priority                = Priority(64);
+
+    const NUDGE_DIMINUTIVE: Priority    = Priority(1);
+    const NUDGE_TINY: Priority          = Priority(2);
+    const NUDGE_SMALL: Priority         = Priority(4);
+    const NUDGE: Priority               = Priority(8);
+}
+
+
 
 pub fn dispatch<C: Handles<E> + 'static, E: Event + 'static>(component: &mut dyn Component, event: &mut dyn Any) {
     let handler = (component as &mut dyn Any).downcast_mut::<C>().unwrap();
@@ -22,60 +40,83 @@ pub trait Component: Any + DynamicHandlers {
             .collect()
     }
 
-    fn get_priority(&self) -> i64 {
-        0
+    fn get_priority(&self) -> Priority {
+        Priority::DEFAULT
     }
 }
 
-pub struct ComponentMap {
-    component_map: HashMap<TypeId, Vec<(TypeId, fn(&mut dyn Component, &mut dyn Any))>>,
-    components: HashMap<TypeId, Box<dyn Component>>
-}
+//-----------------------------------------------TESTS-------------------------------------------------------
 
-impl<'a> ComponentMap {
-    pub fn new() -> Self {
-        ComponentMap {
-            component_map: HashMap::new(),
-            components: HashMap::new()
-        }
+#[cfg(test)]
+mod tests {
+    use std::ops::Deref;
+
+use modular_rogue_macros::DynamicHandlers;
+    use serde::{Deserialize, Serialize};
+
+    use crate::event::stat_change_event::StatChangeEvent;
+
+    use super::*;
+
+
+    #[derive(Serialize, Deserialize, DynamicHandlers, Debug, Default)]
+    #[handles()]
+    struct ZeroHandlesComponent {}
+
+    #[typetag::serde]
+    impl Component for ZeroHandlesComponent {}
+
+    #[derive(Serialize, Deserialize, DynamicHandlers, Debug, Default)]
+    #[handles(StatChangeEvent)]
+    struct OneHandlesComponent {
+        attr1: i32,
+        attr2: i32,
     }
 
-    pub fn insert(&mut self, component: Box<dyn Component>) {
-        let component_type = component.type_id();
-        self.components.insert(component_type, component);
-        let c = self.components.get_mut(&component_type).unwrap();
+    #[typetag::serde]
+    impl Component for OneHandlesComponent {}
 
-        for (t, f) in c.get_handlers().iter() {
-            self.component_map.entry(*t)
-                .or_insert(Vec::new())
-                .push((component_type, *f))
-        }
-
-    }
-
-    pub fn dispatch<T : Event + 'static>(&mut self, e: &mut T ) {
-        for (t, f) in self.component_map.get(&TypeId::of::<T>()).unwrap() {
-            let component = self.components.get_mut(t).unwrap().deref_mut();
-            (f)(component, e);
-        }
+    impl Handles<StatChangeEvent> for OneHandlesComponent {
+        fn handle(&mut self, _e: &mut StatChangeEvent) {
             
+        }
     }
-}
 
-impl Serialize for ComponentMap {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer
-    {
-        serializer.serialize_none()
+    #[test]
+    fn priority_sums_distinct() {
+        let major_priorities = [Priority::LOW, Priority::LOWISH, Priority::DEFAULT, Priority::HIGHISH, Priority::HIGH];
+        let biggest_nudge = Priority::NUDGE + Priority::NUDGE_SMALL + Priority::NUDGE_TINY + Priority::NUDGE_DIMINUTIVE;
+
+        for i in 0..major_priorities.len()-1 {
+            assert!(major_priorities[i].clone() + biggest_nudge < major_priorities[i+1] - biggest_nudge);
+        }
     }
-}
 
-impl<'de, 'a> Deserialize<'de> for ComponentMap {
-    fn deserialize<D>(_deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>
-    {
-        Ok(ComponentMap::new())
+    #[test]
+    fn no_wanted_events() {
+        let component = ZeroHandlesComponent {};
+        assert!(component.get_wanted_events().is_empty())
+    }
+
+    #[test]
+    fn one_wanted_events() {
+        let component = OneHandlesComponent::default();
+        assert!(component.get_wanted_events().contains(&TypeId::of::<StatChangeEvent>()));
+        assert_eq!(component.get_wanted_events().len(), 1);
+    }
+
+    #[test]
+    fn serialize() {
+        let component = Box::new(OneHandlesComponent{
+            attr1: 1,
+            attr2: 2
+        });
+
+        let serialized = serde_json::to_string(&*component as &dyn Component).unwrap();
+        let deserialized: Box<dyn Component> = serde_json::from_str(&serialized).unwrap();
+        let downcast = (deserialized.deref() as &dyn Any).downcast_ref::<OneHandlesComponent>().unwrap();
+
+        assert_eq!(downcast.attr1, 1);
+        assert_eq!(downcast.attr2, 2);
     }
 }

@@ -1,12 +1,9 @@
-use std::any::{Any, TypeId};
-
 use serde::{Deserialize, Serialize};
 
-use crate::{component::component::{Component, ComponentMap}, entity::stats::Stats, event::event::Event};
+use crate::{component::{component::Component, component_map::ComponentMap}, event::event::Event};
 
 #[derive(Serialize, Deserialize)]
 pub struct Entity {
-    stats: Stats,
     components: ComponentMap,
     intrinsics: Vec<Box<dyn Component>>
 }
@@ -14,7 +11,6 @@ pub struct Entity {
 impl Entity{
     pub fn new() -> Self {
         Entity { 
-            stats : Stats::new(),
             components: ComponentMap::new(),
             intrinsics: Vec::new()
         }

@@ -1,21 +1,9 @@
-use std::default;
-
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
-pub struct Stats {
-    pub hp: Stat,
-}
+use crate::component::stats::stat_modifier::StatModifier;
 
-impl Stats {
-    pub fn new() -> Self {
-        Stats {
-            hp: Stat::new()
-        }
-    }
-}
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Stat {
     base: i32,
     cap: i32,
@@ -55,12 +43,4 @@ impl Stat {
     pub fn add_modifier(&mut self, modifier: Box<dyn StatModifier>) {
         self.modifiers.push(modifier);
     }
-}
-
-
-#[typetag::serde(tag = "type")]
-pub trait StatModifier {
-    fn get_bonus(&self) -> i32;
-    fn get_cap_bonus(&self) -> i32;
-    fn is_valid(&self) -> bool;
 }
