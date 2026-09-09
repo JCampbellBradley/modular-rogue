@@ -1,4 +1,4 @@
-use std::any::{Any, TypeId};
+use std::{any::{Any, TypeId}, fmt::Debug};
 
 use derive_more::{Add, Eq, PartialEq, Sub};
 
@@ -33,7 +33,7 @@ pub trait Handles<T: Event>: Component {
 }
 
 #[typetag::serde(tag = "type")]
-pub trait Component: Any + DynamicHandlers {
+pub trait Component: Any + DynamicHandlers + Debug {
     fn get_wanted_events(&self) -> Vec<TypeId> {
         self.get_handlers().iter()
             .map(|t| t.0)

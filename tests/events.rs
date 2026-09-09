@@ -7,7 +7,7 @@ struct ConstEvent {
 }
 impl Event for ConstEvent {}
 
-#[derive(Serialize, Deserialize, DynamicHandlers)]
+#[derive(Serialize, Deserialize, DynamicHandlers, Debug)]
 #[handles(ConstEvent)]
 struct ConstHandler {}
 
