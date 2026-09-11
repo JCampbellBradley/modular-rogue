@@ -3,7 +3,7 @@ use std::{collections::HashMap, fmt::Debug};
 use modular_rogue_macros::DynamicHandlers;
 use serde::{Deserialize, Serialize};
 
-use crate::{component::{component::{Component, Handles}, stats::stat::Stat}, event::stat_change_event::StatChangeEvent};
+use crate::{components::{component::{Component, Handles}, stats::stat::Stat}, events::stat_change_event::StatChangeEvent};
 
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug)]

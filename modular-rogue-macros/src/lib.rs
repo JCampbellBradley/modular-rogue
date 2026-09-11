@@ -33,13 +33,13 @@ pub fn get_handlers_macro(_item: TokenStream) -> TokenStream {
                 .collect();
 
             let entries = events.iter().map(|ev| quote! {
-                (::std::any::TypeId::of::<#ev>(), #modular_rogue_path::component::component::dispatch::<#struct_identifier, #ev>)
+                (::std::any::TypeId::of::<#ev>(), #modular_rogue_path::components::component::dispatch::<#struct_identifier, #ev>)
             });
 
             quote! {
                 #[automatically_derived]
-                impl #modular_rogue_path::component::dynamic_handlers::DynamicHandlers for #struct_identifier {
-                    fn get_handlers(&self) -> Vec<(::std::any::TypeId, fn(&mut dyn #modular_rogue_path::component::component::Component, &mut dyn ::std::any::Any))> {
+                impl #modular_rogue_path::components::dynamic_handlers::DynamicHandlers for #struct_identifier {
+                    fn get_handlers(&self) -> Vec<(::std::any::TypeId, fn(&mut dyn #modular_rogue_path::components::component::Component, &mut dyn ::std::any::Any))> {
                         vec![#(#entries),*]
                     }
                 }

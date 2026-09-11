@@ -1,4 +1,4 @@
-use crate::event::event::Event;
+use crate::events::event::Event;
 
 pub struct StatChangeEvent {
 

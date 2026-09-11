@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::component::stats::stat_modifier::StatModifier;
+use crate::components::stats::stat_modifier::StatModifier;
 
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Stat {
     base: i32,
     cap: i32,
@@ -13,11 +13,7 @@ pub struct Stat {
 
 impl Stat {
     pub fn new() -> Self {
-        Stat {
-            base: 0,
-            cap: std::i32::MAX,
-            modifiers: Vec::new()
-        }
+        Stat::default()
     }
 
     pub fn get(&self) -> i32 {

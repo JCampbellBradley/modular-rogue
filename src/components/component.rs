@@ -2,7 +2,7 @@ use std::{any::{Any, TypeId}, fmt::Debug};
 
 use derive_more::{Add, Eq, PartialEq, Sub};
 
-use crate::{component::dynamic_handlers::DynamicHandlers, event::event::Event};
+use crate::{components::dynamic_handlers::DynamicHandlers, events::event::Event};
 
 #[derive(Add, Sub, PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy)]
 pub struct Priority(i8);
@@ -21,6 +21,7 @@ impl Priority {
 }
 
 
+pub type DispatchFn = fn(&mut dyn Component, &mut dyn Any);
 
 pub fn dispatch<C: Handles<E> + 'static, E: Event + 'static>(component: &mut dyn Component, event: &mut dyn Any) {
     let handler = (component as &mut dyn Any).downcast_mut::<C>().unwrap();
@@ -54,7 +55,7 @@ mod tests {
 use modular_rogue_macros::DynamicHandlers;
     use serde::{Deserialize, Serialize};
 
-    use crate::event::stat_change_event::StatChangeEvent;
+    use crate::events::stat_change_event::StatChangeEvent;
 
     use super::*;
 

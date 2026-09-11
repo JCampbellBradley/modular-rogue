@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{component::{component::Component, component_map::ComponentMap}, event::event::Event};
+use crate::{components::{component::Component, component_map::ComponentMap}, events::event::Event};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Default)]
 pub struct Entity {
     components: ComponentMap,
     intrinsics: Vec<Box<dyn Component>>

@@ -1,4 +1,4 @@
-use modular_rogue::{component::{component::{Component, Handles}}, entity::entity::Entity, event::event::Event};
+use modular_rogue::{components::{component::{Component, Handles}}, entities::entity::Entity, events::event::Event};
 use modular_rogue_macros::DynamicHandlers;
 use serde::{Deserialize, Serialize};
 

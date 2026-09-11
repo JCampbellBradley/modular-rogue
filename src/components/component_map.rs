@@ -1,12 +1,13 @@
-use std::{any::{Any, TypeId}, collections::HashMap, marker::PhantomData, ops::DerefMut};
+use std::{any::{TypeId}, collections::HashMap, marker::PhantomData, ops::DerefMut};
 
 use serde::{Deserialize, Serialize, de::Visitor, ser::SerializeSeq};
 
-use crate::{component::component::Component, event::event::Event};
+use crate::{components::component::{Component, DispatchFn}, events::event::Event};
 
-#[derive(Debug)]
+
+#[derive(Debug, Default)]
 pub struct ComponentMap {
-    component_map: HashMap<TypeId, Vec<(TypeId, fn(&mut dyn Component, &mut dyn Any))>>,
+    component_map: HashMap<TypeId, Vec<(TypeId, DispatchFn)>>,
     components: HashMap<TypeId, Box<dyn Component>>
 }
 
@@ -25,7 +26,7 @@ impl ComponentMap {
 
         for (t, f) in c.get_handlers().iter() {
             self.component_map.entry(*t)
-                .or_insert(Vec::new())
+                .or_default()
                 .push((component_type, *f))
         }
     }
@@ -36,7 +37,7 @@ impl ComponentMap {
 
     pub fn dispatch<T : Event + 'static>(&mut self, e: &mut T ) {
         for (t, f) in self.component_map.entry(TypeId::of::<T>())
-            .or_insert(Vec::new()) 
+            .or_default()
         {
             let component = self.components.get_mut(t).unwrap().deref_mut();
             (f)(component, e);
@@ -51,8 +52,8 @@ impl Serialize for ComponentMap {
         S: serde::Serializer
     {
         let mut components = serializer.serialize_seq(Some(self.components.len()))?;
-        for (_k, v) in &self.components {
-            components.serialize_element(&*v)?;
+        for v in self.components.values() {
+            components.serialize_element(v)?;
         }
         components.end()
     }
@@ -93,7 +94,7 @@ where
     }
 }
 
-impl<'de, 'a> Deserialize<'de> for ComponentMap {
+impl<'de> Deserialize<'de> for ComponentMap {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>
@@ -114,7 +115,7 @@ impl<'de, 'a> Deserialize<'de> for ComponentMap {
 mod tests {
     use modular_rogue_macros::DynamicHandlers;
 
-    use crate::{component::component::Handles};
+    use crate::{components::component::Handles};
 
     use super::*;
 
