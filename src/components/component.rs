@@ -7,6 +7,7 @@ use crate::{components::dynamic_handlers::DynamicHandlers, events::event::Event}
 #[derive(Add, Sub, PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy)]
 pub struct Priority(i8);
 
+#[allow(unused)]
 impl Priority {
     const LOW: Priority                 = Priority(-64);
     const LOWISH: Priority              = Priority(-32);

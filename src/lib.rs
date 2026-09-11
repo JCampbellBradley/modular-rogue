@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 extern crate self as modular_rogue;
 
 pub mod components;
