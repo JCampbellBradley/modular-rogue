@@ -1,0 +1,2 @@
+pub const ZERO_SIZE_ZONE: &str = r"A Zone must have width and height greater than 0";
+pub const OUT_OF_BOUNDS: &str = r"The x and y components of the position must be less than the zone's width and height, respectively";

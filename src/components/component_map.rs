@@ -111,6 +111,8 @@ impl<'de> Deserialize<'de> for ComponentMap {
     }
 }
 
+//-----------------------------------------------TESTS-------------------------------------------------------
+
 #[cfg(test)]
 mod tests {
     use modular_rogue_macros::DynamicHandlers;
