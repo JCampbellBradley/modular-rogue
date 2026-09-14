@@ -117,6 +117,7 @@ use modular_rogue_macros::DynamicHandlers;
         let deserialized: Box<dyn Component> = serde_json::from_str(&serialized).unwrap();
         let downcast = (deserialized.deref() as &dyn Any).downcast_ref::<OneHandlesComponent>().unwrap();
 
+        assert_eq!((*deserialized).type_id(), TypeId::of::<OneHandlesComponent>());
         assert_eq!(downcast.attr1, 1);
         assert_eq!(downcast.attr2, 2);
     }
