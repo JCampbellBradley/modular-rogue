@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use crate::{entities::entity::EntityId, errors::illegal_argument_error::IllegalArgumentError, worlds::{position::Position, registry::RegistryID, zones::{error_messages::{OUT_OF_BOUNDS, ZERO_SIZE_ZONE}, quadtree::QuadTree}}};
 
 pub type ZoneID = RegistryID;
@@ -23,19 +25,31 @@ impl Zone {
         self.entity_tree.get_all()
     }
 
-    pub fn get_entities(&self, pos: Position) -> impl Iterator<Item = EntityId> {
-        self.check_position_in_range(pos);
-        self.entity_tree.get(pos)
+    pub fn get_entities(&self, pos: Position) -> Result<impl Iterator<Item = EntityId>, Box<dyn Error>> {
+        match self.check_position_in_range(pos) {
+            Err(e) => Err(e),
+            Ok(()) => Ok(self.entity_tree.get(pos))
+        }
     }
 
-    pub fn put_entities(&mut self, pos: Position, entity: EntityId) {
-        self.check_position_in_range(pos);
-        self.entity_tree.put(pos, entity)
+    pub fn put_entity(&mut self, pos: Position, entity: EntityId) -> Result<(), Box<dyn Error>> {
+        match self.check_position_in_range(pos) {
+            Err(e) => Err(e),
+            Ok(()) => {
+                self.entity_tree.put(pos, entity);
+                Ok(())
+            }
+        }
     }
 
-    pub fn remove_entities(&mut self, pos: Position, entity: EntityId) {
-        self.check_position_in_range(pos);
-        self.entity_tree.remove(pos, entity)
+    pub fn remove_entity(&mut self, pos: Position, entity: EntityId) -> Result<(), Box<dyn Error>> {
+        match self.check_position_in_range(pos) {
+            Err(e) => Err(e),
+            Ok(()) => {
+                self.entity_tree.remove(pos, entity);
+                Ok(())
+            }
+        }
     }
 
     fn check_size_valid(width: u32, height: u32) {
@@ -56,15 +70,16 @@ impl Zone {
         }
     }
 
-    fn check_position_in_range(&self, pos: Position) {
+    fn check_position_in_range(&self, pos: Position) -> Result<(), Box<dyn Error>> {
         if pos.x >= self.width || pos.y >= self.height {
-            let err = IllegalArgumentError {
+            Err(Box::new(IllegalArgumentError {
                 argument_name: "pos",
                 argument: pos, 
                 reason: OUT_OF_BOUNDS
-            };
-            panic!("{err}");
-        } 
+            }))
+        }  else {
+            Ok(())
+        }
     }
 }
 
@@ -84,6 +99,6 @@ mod tests {
     #[should_panic]
     fn out_of_bounds() {
         let zone = Zone::new(1, 1);
-        let _ = zone.get_entities((1, 1).into());
+        let _ = zone.get_entities((1, 1).into()).expect("");
     }
 }
