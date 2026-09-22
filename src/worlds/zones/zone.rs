@@ -26,30 +26,20 @@ impl Zone {
     }
 
     pub fn get_entities(&self, pos: Position) -> Result<impl Iterator<Item = EntityId>, Box<dyn Error>> {
-        match self.check_position_in_range(pos) {
-            Err(e) => Err(e),
-            Ok(()) => Ok(self.entity_tree.get(pos))
-        }
+        self.check_position_in_range(pos)?;
+        Ok(self.entity_tree.get(pos))
     }
 
     pub fn put_entity(&mut self, pos: Position, entity: EntityId) -> Result<(), Box<dyn Error>> {
-        match self.check_position_in_range(pos) {
-            Err(e) => Err(e),
-            Ok(()) => {
-                self.entity_tree.put(pos, entity);
-                Ok(())
-            }
-        }
+        self.check_position_in_range(pos)?;
+        self.entity_tree.put(pos, entity);
+        Ok(())
     }
 
     pub fn remove_entity(&mut self, pos: Position, entity: EntityId) -> Result<(), Box<dyn Error>> {
-        match self.check_position_in_range(pos) {
-            Err(e) => Err(e),
-            Ok(()) => {
-                self.entity_tree.remove(pos, entity);
-                Ok(())
-            }
-        }
+        self.check_position_in_range(pos)?;
+        self.entity_tree.remove(pos, entity);
+        Ok(())
     }
 
     fn check_size_valid(width: u32, height: u32) {
