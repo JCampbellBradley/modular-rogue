@@ -23,7 +23,7 @@ impl Handles<ConstEvent> for ConstHandler {
 #[test]
 fn const_event() {
     let mut ent = Entity::new();
-    ent.attach(Box::new(ConstHandler {}));
+    let _ = ent.attach(Box::new(ConstHandler {}));
     let mut e = ConstEvent {handled: false};
     ent.handle(&mut e);
     assert_eq!(e.handled, true);

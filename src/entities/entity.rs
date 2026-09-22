@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use serde::{Deserialize, Serialize};
 
 use crate::{components::{component::Component, component_map::ComponentMap}, events::event::Event, worlds::{position::Position, registry::{Registerable, RegistryID}}};
@@ -18,8 +20,8 @@ impl Entity{
         Self::default()
     }
 
-    pub fn attach(&mut self, component: Box<dyn Component>) {
-        self.components.insert(component);
+    pub fn attach(&mut self, component: Box<dyn Component>) -> Result<(), Box<dyn Error>> {
+        self.components.insert(component)
     }
 
     pub fn handle<T: Event + 'static>(&mut self, e: &mut T) {
@@ -28,8 +30,8 @@ impl Entity{
 }
 
 impl Registerable for Entity {
-    fn get_id(&self) -> RegistryID {
-        self.id
+    fn get_id(&self) -> Option<RegistryID> {
+        Some(self.id)
     }
 
     fn set_id(&mut self, id: RegistryID) {

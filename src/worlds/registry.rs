@@ -35,12 +35,8 @@ impl<T: Registerable> Registry<T> {
 }
 
 pub trait Registerable {
-    fn get_id(&self) -> RegistryID;
+    fn get_id(&self) -> Option<RegistryID>;
     fn set_id(&mut self, id: RegistryID);
-
-    fn has_id(&self) -> bool {
-        self.get_id() == 0
-    }
 }
 
 //-----------------------------------------------TESTS-------------------------------------------------------
@@ -51,16 +47,16 @@ mod tests {
 
     #[derive(Default)]
     struct Foo {
-        id: RegistryID
+        id: Option<RegistryID>
     }
 
     impl Registerable for Foo {
-        fn get_id(&self) -> RegistryID {
+        fn get_id(&self) -> Option<RegistryID> {
             self.id
         }
 
         fn set_id(&mut self, id: RegistryID) {
-            self.id = id;
+            self.id = Some(id);
         }
     }
 

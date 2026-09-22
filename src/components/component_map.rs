@@ -1,8 +1,8 @@
-use std::{any::{TypeId}, collections::HashMap, marker::PhantomData, ops::DerefMut};
+use std::{any::TypeId, collections::HashMap, error::Error, marker::PhantomData, ops::DerefMut};
 
 use serde::{Deserialize, Serialize, de::Visitor, ser::SerializeSeq};
 
-use crate::{components::component::{Component, DispatchFn}, events::event::Event};
+use crate::{components::component::{Component, DispatchFn}, errors::insert_clobber_error::InsertClobberError, events::event::Event};
 
 
 #[derive(Debug, Default)]
@@ -19,15 +19,22 @@ impl ComponentMap {
         }
     }
 
-    pub fn insert(&mut self, component: Box<dyn Component>) {
+    pub fn insert(&mut self, component: Box<dyn Component>) -> Result<(), Box<dyn Error>> {
         let component_type = (*component).type_id();
-        let c = self.components.entry(component_type)
-            .or_insert(component);
+        if self.contains_key(component_type) {
+            Err(Box::new(InsertClobberError {
+                argument: component
+            }))
+        } else {
+            let c = self.components.entry(component_type)
+                .or_insert(component);
 
-        for (t, f) in c.get_handlers().iter() {
-            self.component_map.entry(*t)
-                .or_default()
-                .push((component_type, *f))
+            for (t, f) in c.get_handlers().iter() {
+                self.component_map.entry(*t)
+                    .or_default()
+                    .push((component_type, *f))
+            }
+            Ok(())
         }
     }
 
@@ -104,7 +111,7 @@ impl<'de> Deserialize<'de> for ComponentMap {
         let mut component_map = ComponentMap::new();
 
         for el in vec.unwrap_or_default() {
-            component_map.insert(el);
+            let _ = component_map.insert(el);
         }
 
         Ok(component_map)
@@ -156,8 +163,8 @@ mod tests {
     #[test]
     fn insert() {
         let mut component_map = ComponentMap::new();
-        component_map.insert(Box::new(OneHandlesComponent {attr1: 1, attr2: 2}));
-        component_map.insert(Box::new(ZeroHandlesComponent {}));
+        component_map.insert(Box::new(OneHandlesComponent {attr1: 1, attr2: 2})).expect("");
+        component_map.insert(Box::new(ZeroHandlesComponent {})).expect("");
 
         assert_eq!(component_map.components.len(), 2);
         assert!(component_map.contains_key(TypeId::of::<OneHandlesComponent>()));
@@ -165,10 +172,20 @@ mod tests {
     }
 
     #[test]
+    fn double_insert() {
+        let mut component_map = ComponentMap::new();
+        component_map.insert(Box::new(ZeroHandlesComponent {})).expect("");
+        assert!(component_map.insert(Box::new(ZeroHandlesComponent {})).is_err());
+
+        assert_eq!(component_map.components.len(), 1);
+        assert!(component_map.contains_key(TypeId::of::<ZeroHandlesComponent>()));
+    }
+
+    #[test]
     fn serialize() {
         let mut component_map = ComponentMap::new();
-        component_map.insert(Box::new(OneHandlesComponent {attr1: 1, attr2: 2}));
-        component_map.insert(Box::new(ZeroHandlesComponent {}));
+        component_map.insert(Box::new(OneHandlesComponent {attr1: 1, attr2: 2})).expect("");
+        component_map.insert(Box::new(ZeroHandlesComponent {})).expect("");
 
         let serialized = serde_json::to_string(&component_map).unwrap();
         
