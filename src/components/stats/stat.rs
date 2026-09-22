@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::components::stats::stat_modifier::StatModifier;
-
+use std::cmp::min;
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Stat {
@@ -29,7 +29,7 @@ impl Stat {
     }
 
     pub fn set(&mut self, value: i32) {
-        self.base = value;
+        self.base = min(value, self.get_cap());
     }
 
     pub fn set_cap(&mut self, value: i32) {
@@ -38,5 +38,73 @@ impl Stat {
 
     pub fn add_modifier(&mut self, modifier: Box<dyn StatModifier>) {
         self.modifiers.push(modifier);
+    }
+}
+
+//-----------------------------------------------TESTS-------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[derive(Serialize, Deserialize, Debug)]
+    struct TestModifier {}
+
+    #[typetag::serde(name="_stat_test_test_modifier")]
+    impl StatModifier for TestModifier {
+        fn get_bonus(&self) -> i32 {1}
+        fn get_cap_bonus(&self) -> i32 {2}
+        fn is_valid(&self) -> bool {true}
+    }
+
+    #[test]
+    fn get() {
+        let stat = Stat {base: 1, cap: 1, modifiers: Vec::new()};
+
+        assert_eq!(stat.get(), 1);
+    }
+
+    #[test]
+    fn get_cap() {
+        let stat = Stat {base: 1, cap: 1, modifiers: Vec::new()};
+
+        assert_eq!(stat.get_cap(), 1);
+    }
+
+    #[test]
+    fn set() {
+        let mut stat = Stat {base: 1, cap: 2, modifiers: Vec::new()};
+        stat.set(3);
+
+        assert_eq!(stat.get(), 2);
+        assert_eq!(stat.get_cap(), 2);
+    }
+
+    #[test]
+    fn set_cap() {
+        let mut stat = Stat {base: 0, cap: 0, modifiers: Vec::new()};
+        stat.set_cap(1);
+
+        assert_eq!(stat.get(), 0);
+        assert_eq!(stat.get_cap(), 1);
+    }
+
+    #[test]
+    fn add_1_modifier() {
+        let mut stat = Stat {base: 0, cap: 0, modifiers: Vec::new()};
+        stat.add_modifier(Box::new(TestModifier {}));
+
+        assert_eq!(stat.get(), 1);
+        assert_eq!(stat.get_cap(), 2);
+    }
+
+    #[test]
+    fn add_2_modifier() {
+        let mut stat = Stat {base: 0, cap: 0, modifiers: Vec::new()};
+        stat.add_modifier(Box::new(TestModifier {}));
+        stat.add_modifier(Box::new(TestModifier {}));
+
+        assert_eq!(stat.get(), 2);
+        assert_eq!(stat.get_cap(), 4);
     }
 }

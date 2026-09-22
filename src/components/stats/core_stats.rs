@@ -9,16 +9,17 @@ use crate::{components::{component::{Component, Handles}, stats::stat::Stat}, ev
 #[derive(Serialize, Deserialize, PartialEq, Eq, Hash, Debug)]
 enum StatType {
     HP,
-
+    
 }
 
-#[derive(Serialize, Deserialize, DynamicHandlers, Debug)]
+#[derive(Serialize, Deserialize, Default, DynamicHandlers, Debug)]
 #[handles(StatChangeEvent)]
+#[serde(default)]
 struct CoreStats {
     stat_map: HashMap<StatType, Stat>
 }
 
-#[typetag::serde]
+#[typetag::serde(name="core_stats")]
 impl Component for CoreStats {}
 
 impl Handles<StatChangeEvent> for CoreStats {
