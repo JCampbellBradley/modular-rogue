@@ -16,3 +16,5 @@ pub mod stat;
 /// 
 /// Each modifier gives a flat bonus or penalty to the stat or its cap.
 pub mod stat_modifier;
+
+mod test_util;

@@ -45,17 +45,9 @@ impl Stat {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::components::stats::test_util::TestModifier;
 
-    #[derive(Serialize, Deserialize, Debug)]
-    struct TestModifier {}
-
-    #[typetag::serde(name="_stat_test_test_modifier")]
-    impl StatModifier for TestModifier {
-        fn get_bonus(&self) -> i32 {1}
-        fn get_cap_bonus(&self) -> i32 {2}
-        fn is_valid(&self) -> bool {true}
-    }
+use super::*;
 
     #[test]
     fn get() {
@@ -94,8 +86,8 @@ mod tests {
         let mut stat = Stat {base: 0, cap: 0, modifiers: Vec::new()};
         stat.add_modifier(Box::new(TestModifier {}));
 
-        assert_eq!(stat.get(), 1);
-        assert_eq!(stat.get_cap(), 2);
+        assert_eq!(stat.get(), TestModifier::BONUS);
+        assert_eq!(stat.get_cap(), TestModifier::CAP_BONUS);
     }
 
     #[test]
@@ -104,7 +96,7 @@ mod tests {
         stat.add_modifier(Box::new(TestModifier {}));
         stat.add_modifier(Box::new(TestModifier {}));
 
-        assert_eq!(stat.get(), 2);
-        assert_eq!(stat.get_cap(), 4);
+        assert_eq!(stat.get(), TestModifier::BONUS * 2);
+        assert_eq!(stat.get_cap(), TestModifier::CAP_BONUS * 2);
     }
 }
