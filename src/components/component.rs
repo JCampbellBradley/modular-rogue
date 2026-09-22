@@ -64,17 +64,18 @@ use modular_rogue_macros::DynamicHandlers;
     #[handles()]
     struct ZeroHandlesComponent {}
 
-    #[typetag::serde]
+    #[typetag::serde(name="_component_test_zero_handles_component")]
     impl Component for ZeroHandlesComponent {}
 
     #[derive(Serialize, Deserialize, DynamicHandlers, Debug, Default)]
     #[handles(StatChangeEvent)]
+    #[serde(default)]
     struct OneHandlesComponent {
         attr1: i32,
         attr2: i32,
     }
 
-    #[typetag::serde]
+    #[typetag::serde(name="_component_test_one_handles_component")]
     impl Component for OneHandlesComponent {}
 
     impl Handles<StatChangeEvent> for OneHandlesComponent {
@@ -113,12 +114,22 @@ use modular_rogue_macros::DynamicHandlers;
             attr2: 2
         });
 
-        let serialized = serde_json::to_string(&*component as &dyn Component).unwrap();
-        let deserialized: Box<dyn Component> = serde_json::from_str(&serialized).unwrap();
+        let serialized = ron::to_string(&*component as &dyn Component).unwrap();
+        let deserialized: Box<dyn Component> = ron::from_str(&serialized).unwrap();
         let downcast = (deserialized.deref() as &dyn Any).downcast_ref::<OneHandlesComponent>().unwrap();
 
         assert_eq!((*deserialized).type_id(), TypeId::of::<OneHandlesComponent>());
         assert_eq!(downcast.attr1, 1);
         assert_eq!(downcast.attr2, 2);
+    }
+
+    #[test]
+    fn default_deserialization() {
+        let serialized = r#"{"type": "_component_test_one_handles_component"}"#;
+        let deserialized: Box<dyn Component> = ron::from_str(&serialized).unwrap();
+        let downcast = (deserialized.deref() as &dyn Any).downcast_ref::<OneHandlesComponent>().unwrap();
+
+        assert_eq!(downcast.attr1, 0);
+        assert_eq!(downcast.attr2, 0);
     }
 }
