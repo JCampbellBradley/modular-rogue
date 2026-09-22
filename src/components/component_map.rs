@@ -21,8 +21,8 @@ impl ComponentMap {
 
     pub fn insert(&mut self, component: Box<dyn Component>) {
         let component_type = (*component).type_id();
-        self.components.insert(component_type, component);
-        let c = self.components.get_mut(&component_type).unwrap();
+        let c = self.components.entry(component_type)
+            .or_insert(component);
 
         for (t, f) in c.get_handlers().iter() {
             self.component_map.entry(*t)
