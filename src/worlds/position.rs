@@ -1,7 +1,9 @@
-use std::num::TryFromIntError;
+use std::{any::type_name, num::TryFromIntError};
 
 use derive_more::Add;
 use serde::{Deserialize, Serialize};
+
+use crate::errors::illegal_from_error::IllegalFromError;
 
 #[derive(Add, Serialize, Deserialize, Hash, PartialEq, Eq, Clone, Copy, Debug, Default)]
 pub struct Position {
@@ -75,6 +77,7 @@ impl std::ops::Sub<Position> for Position {
     }
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum Dir {
     N,
     NE,
@@ -84,8 +87,7 @@ pub enum Dir {
     SW,
     W,
     NW,
-    ORIGIN,
-    OTHER
+    ORIGIN
 }
 
 impl Dir {
@@ -99,20 +101,56 @@ impl Dir {
             Dir::SW => (-1, -1),
             Dir::W => (-1, 0),
             Dir::NW => (-1, 1),
-            _ => (0, 0)
+            Dir::ORIGIN => (0, 0)
         }.into()
     }
+}
 
-    pub fn get_orthant(tup: &PositionDelta) -> Dir {
-        if tup.x >= 0 {
-            if tup.y >= 0 { Dir::NE }
-            else { Dir::SE }
-        } else {
-            if tup.y >= 0 { Dir::NW }
-            else { Dir::SW }
+impl From<DiagonalDir> for Dir {
+    fn from(value: DiagonalDir) -> Self {
+        match value {
+            DiagonalDir::NE => Dir::NE,
+            DiagonalDir::NW => Dir::NW,
+            DiagonalDir::SW => Dir::SW,
+            DiagonalDir::SE => Dir::SE,
         }
     }
-} 
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+pub enum DiagonalDir {
+    NE,
+    NW,
+    SW,
+    SE
+}
+
+impl DiagonalDir {
+    pub fn orthant_from_delta(delta: &PositionDelta) -> Self {
+        match (delta.x >= 0, delta.y >= 0) {
+            (true, true) => DiagonalDir::NE,
+            (true, false) => DiagonalDir::SE,
+            (false, false) => DiagonalDir::SW,
+            (false, true) => DiagonalDir::NW,
+        }
+    }
+}
+
+impl TryFrom<Dir> for DiagonalDir {
+    type Error = IllegalFromError<Dir>;
+    fn try_from(value: Dir) -> Result<Self, Self::Error> {
+        match value {
+            Dir::NE => Ok(DiagonalDir::NE),
+            Dir::SE => Ok(DiagonalDir::SE),
+            Dir::SW => Ok(DiagonalDir::SW),
+            Dir::NW => Ok(DiagonalDir::NW),
+            _ => Err(IllegalFromError::<Dir> {
+                argument: value,
+                into_type_name: type_name::<Self>()
+            })
+        }
+    }
+}
 
 pub const ALL_DIRS: [Dir; 8] = [Dir::N, Dir::NE, Dir::E, Dir::SE, Dir::S, Dir::SW, Dir::W, Dir::NW];
 pub const CARDINAL_DIRS: [Dir; 4] = [Dir::N, Dir::E, Dir::S,Dir::W];

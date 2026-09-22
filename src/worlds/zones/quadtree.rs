@@ -1,6 +1,6 @@
 use std::{fmt::Debug, iter, ops::Deref};
 
-use crate::{entities::entity::EntityId, worlds::{position::{Dir, Position}}};
+use crate::{entities::entity::EntityId, worlds::position::{DiagonalDir, Position}};
 
 #[derive(Debug)]
 pub struct QuadTree {
@@ -70,36 +70,37 @@ impl QuadBranch {
     }
 
     fn get_subnode_index(&self, pos: Position) -> usize {
-        let delta = pos - (self.left_width(), self.bottom_height()).into();
-        match Dir::get_orthant(&delta) {
-            Dir::NE => 0,
-            Dir::NW => 1,
-            Dir::SE => 2,
-            Dir::SW => 3,
-            _ => panic!()
+        match self.pos_to_orthant(pos) {
+            DiagonalDir::NE => 0,
+            DiagonalDir::NW => 1,
+            DiagonalDir::SE => 2,
+            DiagonalDir::SW => 3
         }
     }
 
     fn get_subnode_size(&self, pos: Position) -> (u32, u32) {
-        match self.get_subnode_index(pos) {
-            0 => (self.right_width(), self.top_height()),
-            1 => (self.left_width(), self.top_height()),
-            2 => (self.right_width(), self.bottom_height()),
-            3 => (self.left_width(), self.bottom_height()),
-            _ => panic!()
+        match self.pos_to_orthant(pos) {
+            DiagonalDir::NE => (self.right_width(), self.top_height()),
+            DiagonalDir::NW => (self.left_width(), self.top_height()),
+            DiagonalDir::SE => (self.right_width(), self.bottom_height()),
+            DiagonalDir::SW => (self.left_width(), self.bottom_height())
         }
     }
 
     fn localize_pos(&self, pos: Position) -> Position {
-        let new_zero = match self.get_subnode_index(pos) {
-            0 => (self.left_width(), self.bottom_height()).into(),
-            1 => (0, self.bottom_height()).into(),
-            2 => (self.left_width(), 0).into(),
-            3 => (0, 0).into(),
-            _ => panic!()
+        let new_zero = match self.pos_to_orthant(pos) {
+            DiagonalDir::NE => (self.left_width(), self.bottom_height()).into(),
+            DiagonalDir::NW => (0, self.bottom_height()).into(),
+            DiagonalDir::SE => (self.left_width(), 0).into(),
+            DiagonalDir::SW => (0, 0).into()
         };
 
         (pos - new_zero).try_into().unwrap()
+    }
+
+    fn pos_to_orthant(&self, pos: Position) -> DiagonalDir {
+        let delta = pos - (self.left_width(), self.bottom_height()).into();
+        DiagonalDir::orthant_from_delta(&delta)
     }
 
     fn get_node(&self, pos: Position) -> Option<&dyn QuadNode> {
@@ -151,6 +152,7 @@ impl QuadNode for QuadBranch {
 
     fn get(&self, pos: Position) -> Box<dyn Iterator<Item = EntityId> + '_> {
         let new_pos = self.localize_pos(pos);
+        
         if let Some(node) = self.get_node(pos) {
             node.get(new_pos)
         } else {
@@ -160,15 +162,21 @@ impl QuadNode for QuadBranch {
 
     fn put(&mut self, pos: Position, entity: EntityId) {
         let new_pos = self.localize_pos(pos);
-        self.get_node_or_create(pos).unwrap().put(new_pos, entity)
+
+        if let Some(node) = self.get_node_or_create(pos) {
+            node.put(new_pos, entity)
+        }
     }
 
     fn remove(&mut self, pos: Position, entity: EntityId) {
         let new_pos = self.localize_pos(pos);
-        self.get_node_mut(pos).unwrap().remove(new_pos, entity);
 
-        if self.get_node(pos).unwrap().is_empty() {
-            self.remove_node(pos);
+        if let Some(node) = self.get_node_mut(pos){
+            node.remove(new_pos, entity);
+
+            if node.is_empty() {
+                self.remove_node(pos);
+            }
         }
     }
 
