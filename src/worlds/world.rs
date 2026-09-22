@@ -1,4 +1,4 @@
-use std::collections::{HashMap};
+use std::{array::IntoIter, collections::HashMap, iter::Flatten};
 
 use crate::{entities::entity::{Entity, EntityId}, errors::error_messages::PLAYER_NOT_PRESENT, events::event::Event, worlds::{position::{ALL_DIRS, Position}, registry::Registry, zones::zone::Zone}};
 
@@ -47,18 +47,30 @@ impl World {
     }
 
     pub fn get_player_zone(&self) -> Option<&Zone> {
-        let zone_position = &self.get_player().zone_position.clone();
-        self.zones.get(zone_position)
+        match &self.get_player().zone_position.clone() {
+            Some(zone_position) => self.zones.get(zone_position),
+            None => None
+        }
     }
 
     pub fn get_player_zone_mut(&mut self) -> Option<&mut Zone> {
-        let zone_position = &self.get_player_mut().zone_position.clone();
-        self.zones.get_mut(zone_position)
+        match &self.get_player_mut().zone_position.clone() {
+            Some(zone_position) => self.zones.get_mut(zone_position),
+            None => None
+        }
     }
 
     pub fn get_active_zones(&mut self) -> impl Iterator<Item = &mut Zone> {
-        let positions = ALL_DIRS
-            .map(|dir| self.get_player().zone_position + dir.to_delta());
+        match self.get_player().zone_position {
+            Some(zone_position) => self.get_disjoint_zones(ALL_DIRS
+                .map(|dir| zone_position + dir.to_delta()))
+                .collect::<Vec<_>>().into_iter(),
+            None => self.get_disjoint_zones([])
+                .collect::<Vec<_>>().into_iter()
+        }
+    }
+
+    fn get_disjoint_zones<const N: usize>(&mut self, positions: [Position; N]) -> Flatten<IntoIter<Option<&mut Zone>, N>> {
         self.zones.get_disjoint_mut(positions.each_ref())
             .into_iter().flatten()
     }

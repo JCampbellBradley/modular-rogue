@@ -4,12 +4,13 @@ use crate::{components::{component::Component, component_map::ComponentMap}, eve
 
 pub type EntityId = RegistryID;
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(default)]
 pub struct Entity {
     id: EntityId,
     components: ComponentMap,
-    pub zone_position: Position,
-    pub position: Position
+    pub zone_position: Option<Position>,
+    pub position: Option<Position>
 }
 
 impl Entity{
@@ -34,4 +35,22 @@ impl Registerable for Entity {
     fn set_id(&mut self, id: RegistryID) {
         self.id = id
     }
+}
+
+impl Default for Entity {
+    fn default() -> Self {
+        Entity { 
+            id: 0, 
+            components: ComponentMap::new(), 
+            zone_position: None, 
+            position: None 
+        }
+    }
+}
+
+//-----------------------------------------------TESTS-------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+
 }
