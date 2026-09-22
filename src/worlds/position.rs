@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::errors::illegal_from_error::IllegalFromError;
 
-#[derive(Add, Serialize, Deserialize, Hash, PartialEq, Eq, Clone, Copy, Debug, Default)]
+#[derive(Serialize, Deserialize, Hash, PartialEq, Eq, Clone, Copy, Debug, Default)]
 pub struct Position {
     pub x: u32,
     pub y: u32
