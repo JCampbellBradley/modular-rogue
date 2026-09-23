@@ -2,7 +2,7 @@
 /// 
 /// Stats can be fetched using a `StatCollectionEvent`,
 /// and changed using a `StatChangeEvent`.
-pub mod core_stats;
+pub mod characteristic_stats;
 
 /// A statictic with a base value, and an optional cap.
 /// 

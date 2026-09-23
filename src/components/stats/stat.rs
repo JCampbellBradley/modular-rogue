@@ -3,6 +3,8 @@ use serde::{Deserialize, Serialize};
 use crate::components::stats::stat_modifier::StatModifier;
 use std::cmp::min;
 
+pub trait StatCategory: Eq + std::hash::Hash {}
+
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct Stat {
     base: i32,
