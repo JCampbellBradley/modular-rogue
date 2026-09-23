@@ -52,37 +52,9 @@ pub trait Component: Any + DynamicHandlers + Debug {
 mod tests {
     use std::ops::Deref;
 
-use modular_rogue_macros::DynamicHandlers;
-    use serde::{Deserialize, Serialize};
-
-    use crate::events::stat_change_event::StatChangeEvent;
+    use crate::{components::test_util::{TestOneHandlesComponent, TestZeroHandlesComponent}, events::stat_change_event::StatChangeEvent};
 
     use super::*;
-
-
-    #[derive(Serialize, Deserialize, DynamicHandlers, Debug, Default)]
-    #[handles()]
-    struct ZeroHandlesComponent {}
-
-    #[typetag::serde(name="_component_test_zero_handles_component")]
-    impl Component for ZeroHandlesComponent {}
-
-    #[derive(Serialize, Deserialize, DynamicHandlers, Debug, Default)]
-    #[handles(StatChangeEvent)]
-    #[serde(default)]
-    struct OneHandlesComponent {
-        attr1: i32,
-        attr2: i32,
-    }
-
-    #[typetag::serde(name="_component_test_one_handles_component")]
-    impl Component for OneHandlesComponent {}
-
-    impl Handles<StatChangeEvent> for OneHandlesComponent {
-        fn handle(&mut self, _e: &mut StatChangeEvent) {
-            
-        }
-    }
 
     #[test]
     fn priority_sums_distinct() {
@@ -96,38 +68,38 @@ use modular_rogue_macros::DynamicHandlers;
 
     #[test]
     fn no_wanted_events() {
-        let component = ZeroHandlesComponent {};
+        let component = TestZeroHandlesComponent {};
         assert!(component.get_wanted_events().is_empty())
     }
 
     #[test]
     fn one_wanted_events() {
-        let component = OneHandlesComponent::default();
+        let component = TestOneHandlesComponent::default();
         assert!(component.get_wanted_events().contains(&TypeId::of::<StatChangeEvent>()));
         assert_eq!(component.get_wanted_events().len(), 1);
     }
 
     #[test]
     fn serialize() {
-        let component = Box::new(OneHandlesComponent{
+        let component = Box::new(TestOneHandlesComponent{
             attr1: 1,
             attr2: 2
         });
 
         let serialized = ron::to_string(&*component as &dyn Component).unwrap();
         let deserialized: Box<dyn Component> = ron::from_str(&serialized).unwrap();
-        let downcast = (deserialized.deref() as &dyn Any).downcast_ref::<OneHandlesComponent>().unwrap();
+        let downcast = (deserialized.deref() as &dyn Any).downcast_ref::<TestOneHandlesComponent>().unwrap();
 
-        assert_eq!((*deserialized).type_id(), TypeId::of::<OneHandlesComponent>());
+        assert_eq!((*deserialized).type_id(), TypeId::of::<TestOneHandlesComponent>());
         assert_eq!(downcast.attr1, 1);
         assert_eq!(downcast.attr2, 2);
     }
 
     #[test]
     fn default_deserialization() {
-        let serialized = r#"{"type": "_component_test_one_handles_component"}"#;
+        let serialized = r#"{"type": "_one_handles_component"}"#;
         let deserialized: Box<dyn Component> = ron::from_str(&serialized).unwrap();
-        let downcast = (deserialized.deref() as &dyn Any).downcast_ref::<OneHandlesComponent>().unwrap();
+        let downcast = (deserialized.deref() as &dyn Any).downcast_ref::<TestOneHandlesComponent>().unwrap();
 
         assert_eq!(downcast.attr1, 0);
         assert_eq!(downcast.attr2, 0);
