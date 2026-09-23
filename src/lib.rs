@@ -1,5 +1,3 @@
-#![cfg_attr(coverage_nightly, feature(coverage_attribute))]
-
 extern crate self as modular_rogue;
 
 pub mod components;

@@ -17,5 +17,4 @@ pub mod stat;
 /// Each modifier gives a flat bonus or penalty to the stat or its cap.
 pub mod stat_modifier;
 
-#[cfg_attr(coverage_nightly, coverage(off))]
 mod test_util;
