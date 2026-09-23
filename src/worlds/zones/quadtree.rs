@@ -1,6 +1,6 @@
 use std::{fmt::Debug, iter, ops::Deref};
 
-use crate::{entities::entity::EntityId, worlds::position::{DiagonalDir, Position}};
+use crate::{entities::entity::EntityId, worlds::{direction::DiagonalDir, position::Position}};
 
 #[derive(Debug)]
 pub struct QuadTree {

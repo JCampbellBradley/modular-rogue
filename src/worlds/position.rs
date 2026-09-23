@@ -1,9 +1,8 @@
-use std::{any::type_name, num::TryFromIntError};
+use std::num::TryFromIntError;
 
 use derive_more::Add;
 use serde::{Deserialize, Serialize};
 
-use crate::errors::illegal_from_error::IllegalFromError;
 
 #[derive(Serialize, Deserialize, Hash, PartialEq, Eq, Clone, Copy, Debug, Default)]
 pub struct Position {
@@ -77,80 +76,67 @@ impl std::ops::Sub<Position> for Position {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-pub enum Dir {
-    N,
-    NE,
-    E,
-    SE,
-    S,
-    SW,
-    W,
-    NW,
-    ORIGIN
-}
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-impl Dir {
-    pub fn to_delta(&self) -> PositionDelta {
-        match self {
-            Dir::N => (0, 1),
-            Dir::NE => (1, 1),
-            Dir::E => (1, 0),
-            Dir::SE => (1, -1),
-            Dir::S => (0, -1),
-            Dir::SW => (-1, -1),
-            Dir::W => (-1, 0),
-            Dir::NW => (-1, 1),
-            Dir::ORIGIN => (0, 0)
-        }.into()
+    #[test]
+    fn delta_from_i32() {
+        let delta: PositionDelta = (-1, 2).into();
+
+        assert_eq!(delta.x, -1);
+        assert_eq!(delta.y, 2);
+    }
+
+    #[test]
+    fn position_from_u32() {
+        let pos: Position = (0, 2).into();
+
+        assert_eq!(pos.x, 0);
+        assert_eq!(pos.y, 2);
+    }
+
+    #[test]
+    fn position_from_delta() {
+        let delta: PositionDelta = (0, 2).into();
+        let pos: Position = delta.try_into().unwrap(); 
+
+        assert_eq!(pos.x, 0);
+        assert_eq!(pos.y, 2);
+    }
+
+    #[test]
+    #[should_panic]
+    fn position_from_delta_err() {
+        let delta: PositionDelta = (-1, 2).into();
+        let _: Position = delta.try_into().unwrap();
+    }
+
+    #[test]
+    fn delta_from_position() {
+        let pos: Position = (0, 2).into();
+        let delta: PositionDelta = pos.try_into().unwrap();
+
+        assert_eq!(delta.x, 0);
+        assert_eq!(delta.y, 2);
+    }
+
+    #[test]
+    #[should_panic]
+    fn delta_from_position_err() {
+        let pos: Position = (0, u32::MAX).into();
+        let _: PositionDelta = pos.try_into().unwrap();
+    }
+
+    #[test]
+    fn add_position_to_delta() {
+        let pos: Position = (0, 2).into();
+        let delta: PositionDelta = (3, -1).into();
+        let sum1 = pos + delta;
+        let sum2 = delta + pos;
+
+        assert_eq!(sum1.x, 3);
+        assert_eq!(sum1.y, 1);
+        assert_eq!(sum1, sum2);
     }
 }
-
-impl From<DiagonalDir> for Dir {
-    fn from(value: DiagonalDir) -> Self {
-        match value {
-            DiagonalDir::NE => Dir::NE,
-            DiagonalDir::NW => Dir::NW,
-            DiagonalDir::SW => Dir::SW,
-            DiagonalDir::SE => Dir::SE,
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
-pub enum DiagonalDir {
-    NE,
-    NW,
-    SW,
-    SE
-}
-
-impl DiagonalDir {
-    pub fn orthant_from_delta(delta: &PositionDelta) -> Self {
-        match (delta.x >= 0, delta.y >= 0) {
-            (true, true) => DiagonalDir::NE,
-            (true, false) => DiagonalDir::SE,
-            (false, false) => DiagonalDir::SW,
-            (false, true) => DiagonalDir::NW,
-        }
-    }
-}
-
-impl TryFrom<Dir> for DiagonalDir {
-    type Error = IllegalFromError<Dir>;
-    fn try_from(value: Dir) -> Result<Self, Self::Error> {
-        match value {
-            Dir::NE => Ok(DiagonalDir::NE),
-            Dir::SE => Ok(DiagonalDir::SE),
-            Dir::SW => Ok(DiagonalDir::SW),
-            Dir::NW => Ok(DiagonalDir::NW),
-            _ => Err(IllegalFromError::<Dir> {
-                argument: value,
-                into_type_name: type_name::<Self>()
-            })
-        }
-    }
-}
-
-pub const ALL_DIRS: [Dir; 8] = [Dir::N, Dir::NE, Dir::E, Dir::SE, Dir::S, Dir::SW, Dir::W, Dir::NW];
-pub const CARDINAL_DIRS: [Dir; 4] = [Dir::N, Dir::E, Dir::S,Dir::W];

@@ -1,6 +1,6 @@
 use std::{array::IntoIter, collections::HashMap, iter::Flatten};
 
-use crate::{entities::entity::{Entity, EntityId}, events::event::Event, worlds::{position::{ALL_DIRS, Position}, registry::Registry, zones::zone::Zone}};
+use crate::{entities::entity::{Entity, EntityId}, events::event::Event, worlds::{direction::ADJACENT_DIRS, position::Position, registry::Registry, zones::zone::Zone}};
 
 #[derive(Default)]
 pub struct World {
@@ -62,7 +62,7 @@ impl World {
 
     pub fn get_active_zones(&mut self) -> impl Iterator<Item = &mut Zone> {
         match self.get_player_zone_position() {
-            Some(zone_position) => self.get_disjoint_zones(ALL_DIRS
+            Some(zone_position) => self.get_disjoint_zones(ADJACENT_DIRS
                 .map(|dir| zone_position + dir.to_delta()))
                 .collect::<Vec<_>>().into_iter(),
             None => self.get_disjoint_zones([])
