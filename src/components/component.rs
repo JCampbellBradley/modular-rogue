@@ -52,7 +52,7 @@ pub trait Component: Any + DynamicHandlers + Debug {
 mod tests {
     use std::ops::Deref;
 
-    use crate::{components::test_util::{TestOneHandlesComponent, TestZeroHandlesComponent}, events::stat_change_event::StatChangeEvent};
+    use crate::components::test_util::{GetAttributesEvent, TestOneHandlesComponent, TestZeroHandlesComponent};
 
     use super::*;
 
@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn one_wanted_events() {
         let component = TestOneHandlesComponent::default();
-        assert!(component.get_wanted_events().contains(&TypeId::of::<StatChangeEvent>()));
+        assert!(component.get_wanted_events().contains(&TypeId::of::<GetAttributesEvent>()));
         assert_eq!(component.get_wanted_events().len(), 1);
     }
 

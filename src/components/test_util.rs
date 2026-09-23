@@ -1,7 +1,7 @@
 use modular_rogue_macros::DynamicHandlers;
 use serde::{Deserialize, Serialize};
 
-use crate::{components::component::{Component, Handles}, events::stat_change_event::StatChangeEvent};
+use crate::{components::component::{Component, Handles}, events::event::Event};
 
 
 
@@ -13,7 +13,7 @@ pub struct TestZeroHandlesComponent {}
 impl Component for TestZeroHandlesComponent {}
 
 #[derive(Serialize, Deserialize, DynamicHandlers, Debug, Default)]
-#[handles(StatChangeEvent)]
+#[handles(GetAttributesEvent)]
 #[serde(default)]
 pub struct TestOneHandlesComponent {
     pub attr1: i32,
@@ -24,8 +24,16 @@ pub struct TestOneHandlesComponent {
 #[typetag::serde(name="_one_handles_component")]
 impl Component for TestOneHandlesComponent {}
 
-impl Handles<StatChangeEvent> for TestOneHandlesComponent {
-    fn handle(&mut self, _e: &mut StatChangeEvent) {
-        
+impl Handles<GetAttributesEvent> for TestOneHandlesComponent {
+    fn handle(&mut self, e: &mut GetAttributesEvent) {
+        e.attr1 = self.attr1;
+        e.attr2 = self.attr2;
     }
 }
+
+#[derive(Default)]
+pub struct GetAttributesEvent {
+    pub attr1: i32,
+    pub attr2: i32
+}
+impl Event for GetAttributesEvent {}

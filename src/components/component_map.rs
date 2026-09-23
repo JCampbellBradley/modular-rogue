@@ -122,70 +122,37 @@ impl<'de> Deserialize<'de> for ComponentMap {
 
 #[cfg(test)]
 mod tests {
-    use modular_rogue_macros::DynamicHandlers;
 
-    use crate::{components::component::Handles};
+    use crate::components::test_util::{GetAttributesEvent, TestOneHandlesComponent, TestZeroHandlesComponent};
 
     use super::*;
-
-
-    #[derive(Serialize, Deserialize, DynamicHandlers, Debug, Default)]
-    #[handles()]
-    struct ZeroHandlesComponent {}
-
-    #[typetag::serde(name="_component_map_test_zero_handles_component")]
-    impl Component for ZeroHandlesComponent {}
-
-    #[derive(Default)]
-    struct GetAttributesEvent {
-        attr1: i32,
-        attr2: i32
-    }
-    impl Event for GetAttributesEvent {}
-
-    #[derive(Serialize, Deserialize, DynamicHandlers, Debug, Default)]
-    #[handles(GetAttributesEvent)]
-    struct OneHandlesComponent {
-        attr1: i32,
-        attr2: i32,
-    }
-
-    #[typetag::serde(name="_component_map_test_one_handles_component")]
-    impl Component for OneHandlesComponent {}
-
-    impl Handles<GetAttributesEvent> for OneHandlesComponent {
-        fn handle(&mut self, e: &mut GetAttributesEvent) {
-            e.attr1 = self.attr1;
-            e.attr2 = self.attr2;
-        }
-    }
 
     #[test]
     fn insert() {
         let mut component_map = ComponentMap::new();
-        component_map.insert(Box::new(OneHandlesComponent {attr1: 1, attr2: 2})).expect("");
-        component_map.insert(Box::new(ZeroHandlesComponent {})).expect("");
+        component_map.insert(Box::new(TestOneHandlesComponent {attr1: 1, attr2: 2})).expect("");
+        component_map.insert(Box::new(TestZeroHandlesComponent {})).expect("");
 
         assert_eq!(component_map.components.len(), 2);
-        assert!(component_map.contains_key(TypeId::of::<OneHandlesComponent>()));
-        assert!(component_map.contains_key(TypeId::of::<ZeroHandlesComponent>()));
+        assert!(component_map.contains_key(TypeId::of::<TestOneHandlesComponent>()));
+        assert!(component_map.contains_key(TypeId::of::<TestZeroHandlesComponent>()));
     }
 
     #[test]
     fn double_insert() {
         let mut component_map = ComponentMap::new();
-        component_map.insert(Box::new(ZeroHandlesComponent {})).expect("");
-        assert!(component_map.insert(Box::new(ZeroHandlesComponent {})).is_err());
+        component_map.insert(Box::new(TestZeroHandlesComponent {})).expect("");
+        assert!(component_map.insert(Box::new(TestZeroHandlesComponent {})).is_err());
 
         assert_eq!(component_map.components.len(), 1);
-        assert!(component_map.contains_key(TypeId::of::<ZeroHandlesComponent>()));
+        assert!(component_map.contains_key(TypeId::of::<TestZeroHandlesComponent>()));
     }
 
     #[test]
     fn serialize() {
         let mut component_map = ComponentMap::new();
-        component_map.insert(Box::new(OneHandlesComponent {attr1: 1, attr2: 2})).expect("");
-        component_map.insert(Box::new(ZeroHandlesComponent {})).expect("");
+        component_map.insert(Box::new(TestOneHandlesComponent {attr1: 1, attr2: 2})).expect("");
+        component_map.insert(Box::new(TestZeroHandlesComponent {})).expect("");
 
         let serialized = serde_json::to_string(&component_map).unwrap();
         
@@ -196,9 +163,9 @@ mod tests {
         deserialized.dispatch(&mut e);
 
         assert_eq!(deserialized.components.len(), 2);
-        assert!(deserialized.contains_key(TypeId::of::<OneHandlesComponent>()));
+        assert!(deserialized.contains_key(TypeId::of::<TestOneHandlesComponent>()));
         assert!(deserialized
-            .contains_key(TypeId::of::<ZeroHandlesComponent>()));
+            .contains_key(TypeId::of::<TestZeroHandlesComponent>()));
 
         assert_eq!(e.attr1, 1);
         assert_eq!(e.attr2, 2);
