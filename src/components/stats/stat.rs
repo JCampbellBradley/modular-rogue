@@ -74,7 +74,7 @@ use super::*;
 
     #[test]
     fn set_cap() {
-        let mut stat = Stat {base: 0, cap: 0, modifiers: Vec::new()};
+        let mut stat = Stat::new();
         stat.set_cap(1);
 
         assert_eq!(stat.get(), 0);
@@ -83,7 +83,7 @@ use super::*;
 
     #[test]
     fn add_1_modifier() {
-        let mut stat = Stat {base: 0, cap: 0, modifiers: Vec::new()};
+        let mut stat = Stat::new();
         stat.add_modifier(Box::new(TestModifier {}));
 
         assert_eq!(stat.get(), TestModifier::BONUS);
@@ -92,7 +92,7 @@ use super::*;
 
     #[test]
     fn add_2_modifier() {
-        let mut stat = Stat {base: 0, cap: 0, modifiers: Vec::new()};
+        let mut stat = Stat::new();
         stat.add_modifier(Box::new(TestModifier {}));
         stat.add_modifier(Box::new(TestModifier {}));
 
