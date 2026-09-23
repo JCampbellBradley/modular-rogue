@@ -9,7 +9,7 @@ pub type EntityId = RegistryID;
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(default)]
 pub struct Entity {
-    id: EntityId,
+    id: Option<EntityId>,
     components: ComponentMap,
     pub zone_position: Option<Position>,
     pub position: Option<Position>
@@ -31,18 +31,18 @@ impl Entity{
 
 impl Registerable for Entity {
     fn get_id(&self) -> Option<RegistryID> {
-        Some(self.id)
+        self.id
     }
 
     fn set_id(&mut self, id: RegistryID) {
-        self.id = id
+        self.id = Some(id)
     }
 }
 
 impl Default for Entity {
     fn default() -> Self {
         Entity { 
-            id: 0, 
+            id: None, 
             components: ComponentMap::new(), 
             zone_position: None, 
             position: None 

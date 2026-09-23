@@ -1,6 +1,6 @@
 use std::{array::IntoIter, collections::HashMap, iter::Flatten};
 
-use crate::{entities::entity::{Entity, EntityId}, errors::error_messages::PLAYER_NOT_PRESENT, events::event::Event, worlds::{position::{ALL_DIRS, Position}, registry::Registry, zones::zone::Zone}};
+use crate::{entities::entity::{Entity, EntityId}, events::event::Event, worlds::{position::{ALL_DIRS, Position}, registry::Registry, zones::zone::Zone}};
 
 #[derive(Default)]
 pub struct World {
@@ -30,12 +30,12 @@ impl World {
         self.entities.get_mut(id)
     }
 
-    pub fn get_player(&self) -> &Entity {
-        self.get_entity(self.player_id).expect(PLAYER_NOT_PRESENT)
+    pub fn get_player(&self) -> Option<&Entity> {
+        self.get_entity(self.player_id)
     }
 
-    pub fn get_player_mut(&mut self) -> &mut Entity {
-        self.get_entity_mut(self.player_id).expect(PLAYER_NOT_PRESENT)
+    pub fn get_player_mut(&mut self) -> Option<&mut Entity> {
+        self.get_entity_mut(self.player_id)
     }
 
     pub fn get_zone(&self, position: &Position) -> Option<& Zone> {
@@ -47,26 +47,33 @@ impl World {
     }
 
     pub fn get_player_zone(&self) -> Option<&Zone> {
-        match &self.get_player().zone_position.clone() {
-            Some(zone_position) => self.zones.get(zone_position),
+        match self.get_player_zone_position() {
+            Some(zone_position) => self.zones.get(&zone_position),
             None => None
         }
     }
 
     pub fn get_player_zone_mut(&mut self) -> Option<&mut Zone> {
-        match &self.get_player_mut().zone_position.clone() {
-            Some(zone_position) => self.zones.get_mut(zone_position),
+        match self.get_player_zone_position() {
+            Some(zone_position) => self.zones.get_mut(&zone_position),
             None => None
         }
     }
 
     pub fn get_active_zones(&mut self) -> impl Iterator<Item = &mut Zone> {
-        match self.get_player().zone_position {
+        match self.get_player_zone_position() {
             Some(zone_position) => self.get_disjoint_zones(ALL_DIRS
                 .map(|dir| zone_position + dir.to_delta()))
                 .collect::<Vec<_>>().into_iter(),
             None => self.get_disjoint_zones([])
                 .collect::<Vec<_>>().into_iter()
+        }
+    }
+
+    fn get_player_zone_position(&self) -> Option<Position> {
+        match self.get_player() {
+            Some(player) => player.zone_position,
+            None => None
         }
     }
 
@@ -83,5 +90,70 @@ impl World {
                 entity.handle(e)
             }
         }
+    }
+}
+
+//-----------------------------------------------TESTS-------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use crate::worlds::registry::Registerable;
+
+use super::*;
+
+    #[test]
+    fn register_entity() {
+        let mut world = World::new();
+        let entity = Entity::new();
+
+        assert!(entity.get_id().is_none());
+
+        let id = world.register_entity(entity);
+
+        let ent_ref = world.get_entity(id).unwrap();
+
+        assert!(ent_ref.get_id().is_some());
+    }
+
+    #[test]
+    fn unregister_entity() {
+        let mut world = World::new();
+        let entity = Entity::new();
+
+        let id = world.register_entity(entity);
+        let entity = world.unregister_entity(id);
+
+        let none = world.get_entity(id);
+
+        assert!(entity.is_some());
+        assert!(none.is_none());
+    }
+
+    #[test]
+    fn get_player_none() {
+        let world = World::new();
+        
+        let none = world.get_player();
+
+        assert!(none.is_none());
+    }
+
+    #[test]
+    fn get_player_zone_none() {
+        let world = World::new();
+        
+        let none = world.get_player_zone();
+
+        assert!(none.is_none());
+    }
+
+    #[test]
+    fn get_active_zones
+    () {
+        let world = World::new();
+        
+        let none = world.get_player_zone();
+
+        assert!(none.is_none());
     }
 }
