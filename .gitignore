@@ -1,2 +1,4 @@
 /target
 /modular-rogue-macros/target
+lcov.info
+.gitignore
