@@ -1,2 +1,2 @@
 [alias]
-cov = "llvm-cov --lcov --output-path lcov.info --ignore-filename-regex 'test_util\\.rs$'"
+cov = "llvm-cov --lcov --output-path lcov.info --ignore-filename-regex test_util\\.rs$"
