@@ -1,8 +1,8 @@
-use std::{any::TypeId, collections::HashMap, error::Error, marker::PhantomData, ops::DerefMut};
+use std::{any::TypeId, collections::HashMap, marker::PhantomData, ops::DerefMut};
 
 use serde::{Deserialize, Serialize, de::Visitor, ser::SerializeSeq};
 
-use crate::{components::component::{Component, DispatchFn}, errors::insert_clobber_error::InsertClobberError, events::event::Event};
+use crate::{components::component::{Component, DispatchFn}, errors::access_error::AccessError, events::event::Event};
 
 
 #[derive(Debug, Default)]
@@ -19,12 +19,12 @@ impl ComponentMap {
         }
     }
 
-    pub fn insert(&mut self, component: Box<dyn Component>) -> Result<(), Box<dyn Error>> {
+    pub fn insert(&mut self, component: Box<dyn Component>) -> Result<(), AccessError<TypeId, Box<dyn Component>>> {
         let component_type = (*component).type_id();
         if self.contains_key(component_type) {
-            Err(Box::new(InsertClobberError {
-                argument: component
-            }))
+            Err(AccessError::BadAdd { 
+                item: component
+            })
         } else {
             let c = self.components.entry(component_type)
                 .or_insert(component);

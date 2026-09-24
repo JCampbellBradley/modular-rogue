@@ -1,8 +1,8 @@
-use std::error::Error;
+use std::any::TypeId;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{components::{component::Component, component_map::ComponentMap}, events::event::Event, worlds::{position::Position, registry::{Registerable, RegistryID}}};
+use crate::{components::{component::Component, component_map::ComponentMap}, errors::access_error::AccessError, events::event::Event, worlds::{position::Position, registry::{Registerable, RegistryID}}};
 
 pub type EntityId = RegistryID;
 
@@ -20,7 +20,7 @@ impl Entity{
         Self::default()
     }
 
-    pub fn attach(&mut self, component: Box<dyn Component>) -> Result<(), Box<dyn Error>> {
+    pub fn attach(&mut self, component: Box<dyn Component>) -> Result<(), AccessError<TypeId, Box<dyn Component>>> {
         self.components.insert(component)
     }
 

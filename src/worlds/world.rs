@@ -148,8 +148,7 @@ use super::*;
     }
 
     #[test]
-    fn get_active_zones
-    () {
+    fn get_active_zones_none() {
         let world = World::new();
         
         let none = world.get_player_zone();

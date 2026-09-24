@@ -1,1 +1,0 @@
-pub const OUT_OF_BOUNDS: &str = r"The x and y components of the position must be less than the zone's width and height, respectively";
