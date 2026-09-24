@@ -63,10 +63,10 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn out_of_bounds() {
         let zone = Zone::new(1, 1);
-        let _ = zone.get_entities((1, 1).into()).expect("");
+
+        assert!(zone.get_entities((1, 1).into()).is_err());
     }
 
     #[test]

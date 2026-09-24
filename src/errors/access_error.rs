@@ -2,13 +2,13 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum AccessError<A, I> {
-    #[error("Argument {arg:?} was out of bounds {low_bound:?} to {high_bound:?}.")]
+    #[error("{arg:?} was out of bounds. Should be between {low_bound:?} and {high_bound:?}." )]
     PositionOutOfBounds {
         arg: A,
         low_bound: A,
         high_bound: A
     },
-    #[error("Item {item:?} was not found at {index:?}")]
+    #[error("{item:?} was not found at {index:?}")]
     BadIndexRemove {
         item: I,
         index: A
