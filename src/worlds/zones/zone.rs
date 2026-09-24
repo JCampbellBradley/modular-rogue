@@ -69,4 +69,30 @@ mod tests {
         let zone = Zone::new(1, 1);
         let _ = zone.get_entities((1, 1).into()).expect("");
     }
+
+    #[test]
+    fn get_entity() {
+        let mut zone = Zone::new(3, 3);
+        let id = 1;
+
+        zone.put_entity((1, 1).into(), id).unwrap();
+
+        let ids: Vec<_> = zone.get_entities((1, 1).into()).unwrap().collect();
+
+        assert_eq!(ids.len(), 1);
+        assert!(ids.contains(&id));
+    }
+
+    #[test]
+    fn remove_entity() {
+        let mut zone = Zone::new(3, 3);
+        let id = 1;
+
+        zone.put_entity((1, 1).into(), id).unwrap();
+        zone.remove_entity((1, 1).into(), id).unwrap();
+
+        let ids: Vec<_> = zone.get_entities((1, 1).into()).unwrap().collect();
+
+        assert_eq!(ids.len(), 0);
+    }
 }
