@@ -5,4 +5,4 @@ pub mod position;
 pub mod direction;
 
 #[cfg(test)]
-mod test_util;
+pub(crate) mod test_util;

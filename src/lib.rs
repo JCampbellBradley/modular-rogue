@@ -6,3 +6,4 @@ pub mod events;
 pub mod util;
 pub mod worlds;
 pub mod errors;
+pub mod blueprints;

@@ -13,7 +13,7 @@ pub struct TestZeroHandlesComponent {}
 impl Component for TestZeroHandlesComponent {}
 
 #[derive(Serialize, Deserialize, DynamicHandlers, Debug, Default)]
-#[handles(GetAttributesEvent)]
+#[handles(TestGetAttributesEvent)]
 #[serde(default)]
 pub struct TestOneHandlesComponent {
     pub attr1: i32,
@@ -24,16 +24,16 @@ pub struct TestOneHandlesComponent {
 #[typetag::serde(name="_one_handles_component")]
 impl Component for TestOneHandlesComponent {}
 
-impl Handles<GetAttributesEvent> for TestOneHandlesComponent {
-    fn handle(&mut self, e: &mut GetAttributesEvent) {
+impl Handles<TestGetAttributesEvent> for TestOneHandlesComponent {
+    fn handle(&mut self, e: &mut TestGetAttributesEvent) {
         e.attr1 = self.attr1;
         e.attr2 = self.attr2;
     }
 }
 
 #[derive(Default)]
-pub struct GetAttributesEvent {
+pub struct TestGetAttributesEvent {
     pub attr1: i32,
     pub attr2: i32
 }
-impl Event for GetAttributesEvent {}
+impl Event for TestGetAttributesEvent {}

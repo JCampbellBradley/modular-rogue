@@ -106,11 +106,11 @@ impl<'de> Deserialize<'de> for ComponentMap {
     where
         D: serde::Deserializer<'de>
     {
-        let vec = deserializer.deserialize_seq(VecVisitor::new());
+        let vec = deserializer.deserialize_seq(VecVisitor::new())?;
 
         let mut component_map = ComponentMap::new();
 
-        for el in vec.unwrap_or_default() {
+        for el in vec {
             let _ = component_map.insert(el);
         }
 
@@ -123,7 +123,7 @@ impl<'de> Deserialize<'de> for ComponentMap {
 #[cfg(test)]
 mod tests {
 
-    use crate::components::test_util::{GetAttributesEvent, TestOneHandlesComponent, TestZeroHandlesComponent};
+    use crate::components::test_util::{TestGetAttributesEvent, TestOneHandlesComponent, TestZeroHandlesComponent};
 
     use super::*;
 
@@ -158,7 +158,7 @@ mod tests {
         
         let mut deserialized: ComponentMap = serde_json::from_str(&serialized).unwrap();
 
-        let mut e = GetAttributesEvent::default();
+        let mut e = TestGetAttributesEvent::default();
 
         deserialized.dispatch(&mut e);
 

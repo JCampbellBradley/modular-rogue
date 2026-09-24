@@ -33,7 +33,7 @@ pub trait Handles<T: Event>: Component {
     fn handle(&mut self, e: &mut T);
 }
 
-#[typetag::serde(tag = "type")]
+#[typetag::serde(tag = "type", content = "content")]
 pub trait Component: Any + DynamicHandlers + Debug {
     fn get_wanted_events(&self) -> Vec<TypeId> {
         self.get_handlers().iter()
@@ -52,7 +52,7 @@ pub trait Component: Any + DynamicHandlers + Debug {
 mod tests {
     use std::ops::Deref;
 
-    use crate::components::test_util::{GetAttributesEvent, TestOneHandlesComponent, TestZeroHandlesComponent};
+    use crate::components::test_util::{TestGetAttributesEvent, TestOneHandlesComponent, TestZeroHandlesComponent};
 
     use super::*;
 
@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn one_wanted_events() {
         let component = TestOneHandlesComponent::default();
-        assert!(component.get_wanted_events().contains(&TypeId::of::<GetAttributesEvent>()));
+        assert!(component.get_wanted_events().contains(&TypeId::of::<TestGetAttributesEvent>()));
         assert_eq!(component.get_wanted_events().len(), 1);
     }
 
@@ -97,7 +97,7 @@ mod tests {
 
     #[test]
     fn default_deserialization() {
-        let serialized = r#"{"type": "_one_handles_component"}"#;
+        let serialized = r#"(type: "_one_handles_component", content: ())"#;
         let deserialized: Box<dyn Component> = ron::from_str(&serialized).unwrap();
         let downcast = (deserialized.deref() as &dyn Any).downcast_ref::<TestOneHandlesComponent>().unwrap();
 

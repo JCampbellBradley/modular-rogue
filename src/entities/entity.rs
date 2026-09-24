@@ -27,6 +27,10 @@ impl Entity{
     pub fn handle<T: Event + 'static>(&mut self, e: &mut T) {
         self.components.dispatch::<T>(e);
     }
+
+    pub fn has_component(&self, t: TypeId) -> bool {
+        self.components.contains_key(t)
+    }
 }
 
 impl Registerable for Entity {
