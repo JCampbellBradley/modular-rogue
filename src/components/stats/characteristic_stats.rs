@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use modular_rogue_macros::DynamicHandlers;
 use serde::{Deserialize, Serialize};
 
-use crate::{components::{component::{Component, Handles}, stats::stat::{Stat, StatCategory}}, events::{stat_change_event::StatChangeEvent, stat_collect_event::{StatCollectEvent, StatCollected}}};
+use crate::{components::{component::{Component, Handles}, stats::{stat::StatCategory, stat::Stat}}, events::{stat_change_event::StatChangeEvent, stat_collect_event::{StatCollectEvent, StatCollected}}};
 
 
 #[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -64,9 +64,6 @@ impl Handles<StatChangeEvent<Characteristic>> for CharacteristicStats {
         for (&stat_type, v) in e.impulses.iter() {
             let stat = self.get_mut(stat_type);
 
-            if let Some(new_cap) = v.new_cap {
-                stat.set_cap(new_cap);
-            }
             if let Some(new_base) = v.new_base {
                 stat.set(new_base);
             }
@@ -81,7 +78,7 @@ impl Handles<StatCollectEvent<Characteristic>> for CharacteristicStats {
 
             let collected = StatCollected {
                 base: stat.get(),
-                cap: stat.get_cap(),
+                cap: stat.get(),
             };
 
             e.stats.insert(stat_type, Some(collected));
@@ -102,8 +99,7 @@ mod tests {
         for (i, &stat_type) in CHARACTERISTICS.iter().enumerate() {
             let val = i.try_into().unwrap();
             let mut change = StatChangeEvent::new()
-                .change_base(stat_type, val)
-                .change_cap(stat_type, val*2);
+                .change_base(stat_type, val);
 
             stats.handle(&mut change);
 
@@ -115,13 +111,12 @@ mod tests {
             let intelligence = collect.get(stat_type).unwrap();
 
             assert_eq!(intelligence.base, val);
-            assert_eq!(intelligence.cap, val*2);
         }
     }
 
     #[test]
     fn unwanted_stat() {
-        let mut stats = CharacteristicStats::new();
+        let mut stats: CharacteristicStats = CharacteristicStats::new();
         let mut collect = StatCollectEvent::new();
 
         stats.handle(&mut collect);

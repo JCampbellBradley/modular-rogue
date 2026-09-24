@@ -4,13 +4,14 @@
 /// and changed using a `StatChangeEvent`.
 pub mod characteristic_stats;
 
+pub mod stat;
+
 /// A statictic with a base value, and an optional cap.
 /// 
 /// Any nonpermanent change to a stat should be accomplished through
 /// a `StatModifier`, rather than through setter methods,
 /// with the exception of stats that are constantly changing, such as `HP`.
-pub mod stat;
-
+pub mod capped_stat;
 
 /// A dynamic modifier to a stat.
 /// 
