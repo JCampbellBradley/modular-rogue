@@ -1,20 +1,20 @@
-use std::any::type_name;
 
 use serde::{Deserialize, Serialize};
+use subenum::subenum;
 
-use crate::{errors::illegal_from_error::IllegalFromError, worlds::position::PositionDelta};
+use crate::worlds::position::PositionDelta;
 
-
+#[subenum(CardinalDir, DiagonalDir)]
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub enum Dir {
-    N,
-    NE,
-    E,
-    SE,
-    S,
-    SW,
-    W,
-    NW,
+    #[subenum(CardinalDir)] N,
+    #[subenum(CardinalDir)] E,
+    #[subenum(CardinalDir)] S,
+    #[subenum(CardinalDir)] W,
+    #[subenum(DiagonalDir)] NE,
+    #[subenum(DiagonalDir)] SE,
+    #[subenum(DiagonalDir)] SW,
+    #[subenum(DiagonalDir)] NW,
     ORIGIN
 }
 
@@ -34,36 +34,6 @@ impl Dir {
     }
 }
 
-impl From<DiagonalDir> for Dir {
-    fn from(value: DiagonalDir) -> Self {
-        match value {
-            DiagonalDir::NE => Dir::NE,
-            DiagonalDir::NW => Dir::NW,
-            DiagonalDir::SW => Dir::SW,
-            DiagonalDir::SE => Dir::SE,
-        }
-    }
-}
-
-impl From<CardinalDir> for Dir {
-    fn from(value: CardinalDir) -> Self {
-        match value {
-            CardinalDir::N => Dir::N,
-            CardinalDir::E => Dir::E,
-            CardinalDir::S => Dir::S,
-            CardinalDir::W => Dir::W,
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub enum DiagonalDir {
-    NE,
-    NW,
-    SW,
-    SE
-}
-
 impl DiagonalDir {
     pub fn orthant_from_delta(delta: &PositionDelta) -> Self {
         match (delta.x >= 0, delta.y >= 0) {
@@ -71,46 +41,6 @@ impl DiagonalDir {
             (true, false) => DiagonalDir::SE,
             (false, false) => DiagonalDir::SW,
             (false, true) => DiagonalDir::NW,
-        }
-    }
-}
-
-impl TryFrom<Dir> for DiagonalDir {
-    type Error = IllegalFromError<Dir>;
-    fn try_from(value: Dir) -> Result<Self, Self::Error> {
-        match value {
-            Dir::NE => Ok(DiagonalDir::NE),
-            Dir::SE => Ok(DiagonalDir::SE),
-            Dir::SW => Ok(DiagonalDir::SW),
-            Dir::NW => Ok(DiagonalDir::NW),
-            _ => Err(IllegalFromError::<Dir> {
-                argument: value,
-                into_type_name: type_name::<Self>()
-            })
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub enum CardinalDir {
-    N,
-    E,
-    S,
-    W
-}
-
-impl TryFrom<Dir> for CardinalDir {
-    type Error = IllegalFromError<Dir>;
-    fn try_from(value: Dir) -> Result<Self, Self::Error> {
-        match value {
-            Dir::N => Ok(CardinalDir::N),
-            Dir::E => Ok(CardinalDir::E),
-            Dir::S => Ok(CardinalDir::S),
-            Dir::W => Ok(CardinalDir::W),
-            _ => Err(IllegalFromError::<Dir> {
-                argument: value,
-                into_type_name: type_name::<Self>()
-            })
         }
     }
 }
@@ -139,7 +69,8 @@ mod tests {
     fn dir_to_from_diagonal() {
         for diag in DIAGONAL_DIRS {
             let dir: Dir = diag.into();
-            assert_eq!(diag, dir.try_into().unwrap())
+            let diag2: DiagonalDir = dir.try_into().unwrap();
+            assert_eq!(diag, diag2)
         }
     }
 
@@ -165,7 +96,8 @@ mod tests {
     fn dir_to_from_cardinal() {
         for card in CARDINAL_DIRS {
             let dir: Dir = card.into();
-            assert_eq!(card, dir.try_into().unwrap())
+            let card2: CardinalDir = dir.try_into().unwrap();
+            assert_eq!(card, card2)
         }
     }
 }
