@@ -1,7 +1,7 @@
 use modular_rogue_macros::DynamicHandlers;
 use serde::{Deserialize, Serialize};
 
-use crate::{components::component::{Component, Handles}, events::event::Event};
+use crate::{components::component::{Component, HandlesConst}, events::event::{ConstEvent, Event}};
 
 
 
@@ -24,8 +24,8 @@ pub struct TestOneHandlesComponent {
 #[typetag::serde(name="_one_handles_component")]
 impl Component for TestOneHandlesComponent {}
 
-impl Handles<TestGetAttributesEvent> for TestOneHandlesComponent {
-    fn handle(&mut self, e: &mut TestGetAttributesEvent) {
+impl HandlesConst<TestGetAttributesEvent> for TestOneHandlesComponent {
+    fn handle(&self, e: &mut TestGetAttributesEvent) {
         e.attr1 = self.attr1;
         e.attr2 = self.attr2;
     }
@@ -37,3 +37,4 @@ pub struct TestGetAttributesEvent {
     pub attr2: i32
 }
 impl Event for TestGetAttributesEvent {}
+impl ConstEvent for TestGetAttributesEvent {}

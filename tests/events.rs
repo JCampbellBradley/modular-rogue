@@ -1,21 +1,22 @@
-use modular_rogue::{components::{component::{Component, Handles}}, entities::entity::Entity, events::event::Event};
+use modular_rogue::{components::component::{Component, HandlesConst}, entities::entity::Entity, events::event::{ConstEvent, Event}};
 use modular_rogue_macros::DynamicHandlers;
 use serde::{Deserialize, Serialize};
 
-struct ConstEvent {
+struct TestEvent {
     pub handled: bool
 }
-impl Event for ConstEvent {}
+impl Event for TestEvent {}
+impl ConstEvent for TestEvent {}
 
 #[derive(Serialize, Deserialize, DynamicHandlers, Debug)]
-#[handles(ConstEvent)]
+#[handles(TestEvent)]
 struct ConstHandler {}
 
 #[typetag::serde]
 impl Component for ConstHandler {}
 
-impl Handles<ConstEvent> for ConstHandler {
-    fn handle(&mut self, e: &mut ConstEvent) {
+impl HandlesConst<TestEvent> for ConstHandler {
+    fn handle(&self, e: &mut TestEvent) {
         e.handled = true;
     }
 }
@@ -24,7 +25,7 @@ impl Handles<ConstEvent> for ConstHandler {
 fn const_event() {
     let mut ent = Entity::new();
     let _ = ent.attach(Box::new(ConstHandler {}));
-    let mut e = ConstEvent {handled: false};
+    let mut e = TestEvent {handled: false};
     ent.handle(&mut e);
     assert_eq!(e.handled, true);
 }

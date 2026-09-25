@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{components::stats::stat::StatCategory, events::event::Event};
+use crate::{components::stats::stat::StatCategory, events::event::{Event, MutEvent}};
 
 #[derive(Default, Debug, Clone, Copy)]
 pub struct StatChangeImpulse {
@@ -38,6 +38,7 @@ impl<T: StatCategory> StatChangeEvent<T> {
 }
 
 impl<T: StatCategory> Event for StatChangeEvent<T> {}
+impl<T: StatCategory> MutEvent for StatChangeEvent<T> {}
 
 #[cfg(test)]
 mod tests {

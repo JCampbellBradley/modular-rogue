@@ -47,7 +47,7 @@ mod tests {
     fn test_load() {
         let bp: EntityBlueprint = ron::from_str(r#"EntityBlueprint(components: (_one_handles_component: (attr1: 5)))"#).unwrap();
 
-        let mut ent = bp.build().unwrap();
+        let ent = bp.build().unwrap();
 
         let mut e = TestGetAttributesEvent::default();
 

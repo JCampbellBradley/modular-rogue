@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use crate::{components::stats::stat::StatCategory, events::event::Event};
+use crate::{components::stats::stat::StatCategory, events::event::{ConstEvent, Event}};
 
 
 #[derive(Debug, Clone, Copy)]
@@ -43,3 +43,4 @@ impl<T: StatCategory> StatCollectEvent<T> {
 }
 
 impl<T: StatCategory> Event for StatCollectEvent<T> {}
+impl<T: StatCategory> ConstEvent for StatCollectEvent<T> {}

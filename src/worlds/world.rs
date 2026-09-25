@@ -1,6 +1,6 @@
 use std::{array::IntoIter, collections::HashMap, iter::Flatten};
 
-use crate::{entities::entity::{Entity, EntityId}, events::event::Event, worlds::{direction::ADJACENT_DIRS, position::Position, registry::Registry, zones::zone::Zone}};
+use crate::{entities::entity::{Entity, EntityId}, events::event::{ConstEvent, MutEvent}, worlds::{direction::ADJACENT_DIRS, position::Position, registry::Registry, zones::zone::Zone}};
 
 #[derive(Default)]
 pub struct World {
@@ -82,12 +82,22 @@ impl World {
             .into_iter().flatten()
     }
 
-    pub fn handle<T: Event + 'static>(&mut self, e: &mut T) {
+    pub fn handle<T: ConstEvent + 'static>(&mut self, e: &mut T) {
+        for id in self.get_active_zones()
+            .flat_map(|zone| zone.get_all_entities()).collect::<Vec<EntityId>>()
+        {
+            if let Some(entity) = self.get_entity(id) {
+                entity.handle(e)
+            }
+        }
+    }
+
+    pub fn handle_mut<T: MutEvent + 'static>(&mut self, e: &mut T) {
         for id in self.get_active_zones()
             .flat_map(|zone| zone.get_all_entities()).collect::<Vec<EntityId>>()
         {
             if let Some(entity) = self.get_entity_mut(id) {
-                entity.handle(e)
+                entity.handle_mut(e)
             }
         }
     }

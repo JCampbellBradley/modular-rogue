@@ -2,7 +2,7 @@ use std::any::TypeId;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{components::{component::Component, component_map::ComponentMap}, errors::access_error::AccessError, events::event::Event, worlds::{position::Position, registry::{Registerable, RegistryID}}};
+use crate::{components::{component::Component, component_map::ComponentMap}, errors::access_error::AccessError, events::event::{ConstEvent, MutEvent}, worlds::{position::Position, registry::{Registerable, RegistryID}}};
 
 pub type EntityId = RegistryID;
 
@@ -24,8 +24,12 @@ impl Entity{
         self.components.insert(component)
     }
 
-    pub fn handle<T: Event + 'static>(&mut self, e: &mut T) {
+    pub fn handle<T: ConstEvent + 'static>(&self, e: &mut T) {
         self.components.dispatch::<T>(e);
+    }
+
+    pub fn handle_mut<T: MutEvent + 'static>(&mut self, e: &mut T) {
+        self.components.dispatch_mut::<T>(e);
     }
 
     pub fn has_component(&self, t: TypeId) -> bool {

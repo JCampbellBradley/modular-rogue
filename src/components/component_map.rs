@@ -2,21 +2,19 @@ use std::{any::TypeId, collections::HashMap, marker::PhantomData, ops::DerefMut}
 
 use serde::{Deserialize, Serialize, de::Visitor, ser::SerializeSeq};
 
-use crate::{components::component::{Component, DispatchFn}, errors::access_error::AccessError, events::event::Event};
+use crate::{components::component::{Component, ConstDispatchFn, MutDispatchFn}, errors::access_error::AccessError, events::event::{ConstEvent, MutEvent}};
 
 
 #[derive(Debug, Default)]
 pub struct ComponentMap {
-    component_map: HashMap<TypeId, Vec<(TypeId, DispatchFn)>>,
+    component_map: HashMap<TypeId, Vec<(TypeId, ConstDispatchFn)>>,
+    component_map_mut: HashMap<TypeId, Vec<(TypeId, MutDispatchFn)>>,
     components: HashMap<TypeId, Box<dyn Component>>
 }
 
 impl ComponentMap {
     pub fn new() -> Self {
-        ComponentMap {
-            component_map: HashMap::new(),
-            components: HashMap::new()
-        }
+        Self::default()
     }
 
     pub fn insert(&mut self, component: Box<dyn Component>) -> Result<(), AccessError<TypeId, Box<dyn Component>>> {
@@ -42,14 +40,22 @@ impl ComponentMap {
         self.components.contains_key(&t)
     }
 
-    pub fn dispatch<T : Event + 'static>(&mut self, e: &mut T ) {
-        for (t, f) in self.component_map.entry(TypeId::of::<T>())
-            .or_default()
-        {
-            let component = self.components.get_mut(t).unwrap().deref_mut();
-            (f)(component, e);
-        }
-            
+    pub fn dispatch<T : ConstEvent + 'static>(&self, e: &mut T ) {
+        if let Some(vec)= self.component_map.get(&TypeId::of::<T>()) {
+            for (t, f) in vec {
+                let component = self.components.get(t).unwrap().as_ref();
+                (f)(component, e);
+            }
+        }   
+    }
+
+    pub fn dispatch_mut<T : MutEvent + 'static>(&mut self, e: &mut T ) {
+        if let Some(vec)= self.component_map_mut.get(&TypeId::of::<T>()) {
+            for (t, f) in vec {
+                let component = self.components.get_mut(t).unwrap().deref_mut();
+                (f)(component, e);
+            }
+        }    
     }
 }
 
@@ -156,7 +162,7 @@ mod tests {
 
         let serialized = serde_json::to_string(&component_map).unwrap();
         
-        let mut deserialized: ComponentMap = serde_json::from_str(&serialized).unwrap();
+        let deserialized: ComponentMap = serde_json::from_str(&serialized).unwrap();
 
         let mut e = TestGetAttributesEvent::default();
 

@@ -2,7 +2,7 @@ use std::{any::{Any, TypeId}, fmt::Debug};
 
 use derive_more::{Add, Eq, PartialEq, Sub};
 
-use crate::{components::dynamic_handlers::DynamicHandlers, events::event::Event};
+use crate::{components::dynamic_handlers::DynamicHandlers, events::event::{ConstEvent, MutEvent}};
 
 #[derive(Add, Sub, PartialEq, Eq, PartialOrd, Ord, Debug, Clone, Copy)]
 pub struct Priority(i8);
@@ -21,16 +21,27 @@ impl Priority {
 }
 
 
-pub type DispatchFn = fn(&mut dyn Component, &mut dyn Any);
+pub type ConstDispatchFn = fn(&dyn Component, &mut dyn Any);
+pub type MutDispatchFn = fn(&mut dyn Component, &mut dyn Any);
 
-pub fn dispatch<C: Handles<E> + 'static, E: Event + 'static>(component: &mut dyn Component, event: &mut dyn Any) {
-    let handler = (component as &mut dyn Any).downcast_mut::<C>().unwrap();
+pub fn dispatch<C: HandlesConst<E> + 'static, E: ConstEvent + 'static>(component: &dyn Component, event: &mut dyn Any) {
+    let handler = (component as &dyn Any).downcast_ref::<C>().unwrap();
     let downcast_event = event.downcast_mut::<E>().unwrap();
     handler.handle(downcast_event);
 }
 
-pub trait Handles<T: Event>: Component {
-    fn handle(&mut self, e: &mut T);
+pub fn dispatch_mut<C: HandlesMut<E> + 'static, E: MutEvent + 'static>(component: &mut dyn Component, event: &mut dyn Any) {
+    let handler = (component as &mut dyn Any).downcast_mut::<C>().unwrap();
+    let downcast_event = event.downcast_mut::<E>().unwrap();
+    handler.handle_mut(downcast_event);
+}
+
+pub trait HandlesConst<T: ConstEvent>: Component {
+    fn handle(&self, e: &mut T);
+}
+
+pub trait HandlesMut<T: MutEvent>: Component {
+    fn handle_mut(&mut self, e: &mut T);
 }
 
 #[typetag::serde(tag = "type", content = "content")]

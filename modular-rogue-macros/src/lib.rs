@@ -15,6 +15,23 @@ fn crate_path() -> proc_macro2::TokenStream {
     }
 }
 
+enum HandledEvent {
+    Const(Path),
+    Mut(Path),
+}
+
+impl syn::parse::Parse for HandledEvent {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        if input.peek(Token![mut]) {
+            input.parse::<Token![mut]>()?;
+            Ok(HandledEvent::Mut(input.parse()?))
+        } else {
+            Ok(HandledEvent::Const(input.parse()?))
+        }
+    }
+}
+
+
 #[proc_macro_derive(DynamicHandlers, attributes(handles))]
 pub fn get_handlers_macro(_item: TokenStream) -> TokenStream {
     let modular_rogue_path = crate_path();
@@ -25,22 +42,34 @@ pub fn get_handlers_macro(_item: TokenStream) -> TokenStream {
 
     match &input.data {
         Data::Struct(DataStruct { ..}) => { 
-            let events: Vec<Path> = input.attrs.iter()
+            let events: Vec<HandledEvent> = input.attrs.iter()
                 .find(|a| a.path().is_ident("handles"))
-                .map(|a| a.parse_args_with(Punctuated::<Path, Token![,]>::parse_terminated).unwrap())
+                .map(|a| a.parse_args_with(Punctuated::<HandledEvent, Token![,]>::parse_terminated).unwrap())
                 .into_iter()
                 .flatten()
                 .collect();
 
-            let entries = events.iter().map(|ev| quote! {
-                (::std::any::TypeId::of::<#ev>(), #modular_rogue_path::components::component::dispatch::<#struct_identifier, #ev>)
-            });
+            let entries = events.iter()
+                .filter_map(|ev| match ev { HandledEvent::Const(p) => Some(p), _ => None })
+                .map(|ev| quote! {
+                    (::std::any::TypeId::of::<#ev>(), #modular_rogue_path::components::component::dispatch::<#struct_identifier, #ev>)
+                });
+
+            let entries_mut = events.iter()
+                .filter_map(|ev| match ev { HandledEvent::Mut(p) => Some(p), _ => None })
+                .map(|ev| quote! {
+                    (::std::any::TypeId::of::<#ev>(), #modular_rogue_path::components::component::dispatch_mut::<#struct_identifier, #ev>)
+                });
 
             quote! {
                 #[automatically_derived]
                 impl #modular_rogue_path::components::dynamic_handlers::DynamicHandlers for #struct_identifier {
-                    fn get_handlers(&self) -> Vec<(::std::any::TypeId, fn(&mut dyn #modular_rogue_path::components::component::Component, &mut dyn ::std::any::Any))> {
+                    fn get_handlers(&self) -> Vec<(::std::any::TypeId, fn(&dyn #modular_rogue_path::components::component::Component, &mut dyn ::std::any::Any))> {
                         vec![#(#entries),*]
+                    }
+                    
+                    fn get_handlers_mut(&self) -> Vec<(::std::any::TypeId, fn(&mut dyn #modular_rogue_path::components::component::Component, &mut dyn ::std::any::Any))> {
+                        vec![#(#entries_mut),*]
                     }
                 }
             }

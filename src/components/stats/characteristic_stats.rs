@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use modular_rogue_macros::DynamicHandlers;
 use serde::{Deserialize, Serialize};
 
-use crate::{components::{component::{Component, Handles}, stats::{stat::StatCategory, stat::Stat}}, events::{stat_change_event::StatChangeEvent, stat_collect_event::{StatCollectEvent, StatCollected}}};
+use crate::{components::{component::{Component, HandlesConst, HandlesMut}, stats::stat::{Stat, StatCategory}}, events::{stat_change_event::StatChangeEvent, stat_collect_event::{StatCollectEvent, StatCollected}}};
 
 
 #[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Hash, Debug)]
@@ -28,7 +28,7 @@ pub const CHARACTERISTICS: [Characteristic; 6] = [
 ];
 
 #[derive(Serialize, Deserialize, Default, DynamicHandlers, Debug)]
-#[handles(StatChangeEvent<Characteristic>, StatCollectEvent<Characteristic>)]
+#[handles(StatCollectEvent<Characteristic>, mut StatChangeEvent<Characteristic>)]
 #[serde(default)]
 pub struct CharacteristicStats {
     strength: Stat,
@@ -42,6 +42,17 @@ pub struct CharacteristicStats {
 impl CharacteristicStats {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    fn get(&self, stat_type: Characteristic) -> &Stat {
+        match stat_type {
+            Characteristic::Strength => &self.strength,
+            Characteristic::Dexterity => &self.dexterity,
+            Characteristic::Constitution => &self.constitution,
+            Characteristic::Intelligence => &self.intelligence,
+            Characteristic::Wisdom => &self.wisdom,
+            Characteristic::Charisma => &self.charisma,
+        }
     }
 
     fn get_mut(&mut self, stat_type: Characteristic) -> &mut Stat {
@@ -59,8 +70,8 @@ impl CharacteristicStats {
 #[typetag::serde(name="characteristic_stats")]
 impl Component for CharacteristicStats {}
 
-impl Handles<StatChangeEvent<Characteristic>> for CharacteristicStats {
-    fn handle(&mut self, e: &mut StatChangeEvent<Characteristic>) {
+impl HandlesMut<StatChangeEvent<Characteristic>> for CharacteristicStats {
+    fn handle_mut(&mut self, e: &mut StatChangeEvent<Characteristic>) {
         for (&stat_type, v) in e.impulses.iter() {
             let stat = self.get_mut(stat_type);
 
@@ -71,10 +82,10 @@ impl Handles<StatChangeEvent<Characteristic>> for CharacteristicStats {
     }
 }
 
-impl Handles<StatCollectEvent<Characteristic>> for CharacteristicStats {
-    fn handle(&mut self, e: &mut StatCollectEvent<Characteristic>) {
+impl HandlesConst<StatCollectEvent<Characteristic>> for CharacteristicStats {
+    fn handle(&self, e: &mut StatCollectEvent<Characteristic>) {
         for &stat_type in e.wanted.iter() {
-            let stat = self.get_mut(stat_type);
+            let stat = self.get(stat_type);
 
             let collected = StatCollected {
                 base: stat.get(),
@@ -101,7 +112,7 @@ mod tests {
             let mut change = StatChangeEvent::new()
                 .change_base(stat_type, val);
 
-            stats.handle(&mut change);
+            stats.handle_mut(&mut change);
 
             let mut collect = StatCollectEvent::new()
                 .want(stat_type);
@@ -116,7 +127,7 @@ mod tests {
 
     #[test]
     fn unwanted_stat() {
-        let mut stats: CharacteristicStats = CharacteristicStats::new();
+        let stats: CharacteristicStats = CharacteristicStats::new();
         let mut collect = StatCollectEvent::new();
 
         stats.handle(&mut collect);
