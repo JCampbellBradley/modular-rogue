@@ -1,7 +1,7 @@
 /// Example syntax:
 /// Goblin(
-///     components: (
-///         characteristic_stats: (
+///     components: {
+///         "core:characteristic_stats": (
 ///             strength: 10,
 ///             dexterity: 10,
 ///             constitution: 10,
@@ -10,8 +10,6 @@
 ///             charisma: 10,
 ///         ),
 ///         living: (),
-///     ),
+///     },
 /// )
 pub mod entity_blueprint;
-
-pub mod blueprint;

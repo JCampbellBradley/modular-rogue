@@ -5,7 +5,7 @@ use thiserror::Error;
 use crate::{components::component::Component, errors::{access_error::AccessError, registry_error::RegistryError}};
 
 #[derive(Error, Debug)]
-pub enum BlueprintError {
+pub enum BakeError {
     #[error("{0:?}")]
     RonError(#[from] ron::Error),
     #[error("{0:?}")]
