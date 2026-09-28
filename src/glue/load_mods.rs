@@ -11,20 +11,18 @@ struct LoadedMod {
 
 pub type RegisterFn = fn(&mut ModContext<'_>) -> Result<(), RegistryError>;
 
-pub fn load_mods(dir: &Path, mut mod_registry: ModRegistry) -> Result<ModRegistry, ModError> {
+pub fn load_mods(dir: &Path, mod_registry: ModRegistry) -> Result<ModRegistry, ModError> {
     let mut mods = Vec::<LoadedMod>::new();
+    read_mods(&mut mods, dir)?;
+    process_mods(mods, mod_registry)
+}
 
+fn read_mods(mods: &mut Vec<LoadedMod>, dir: &Path) -> Result<(), ModError> {
     if let Ok(dir_entries)  = fs::read_dir(dir) {
-        collect_mods(&mut mods, dir_entries)?;
+        collect_mods(mods, dir_entries)
     } else {
-        return Ok(mod_registry);
+        Ok(())
     }
-
-    let mods = topological_sort(mods)?;
-    assert_unique(&mods)?;
-    register_mods(&mods, &mut mod_registry)?;
-    
-    Ok(mod_registry)
 }
 
 fn collect_mods(mods: &mut Vec<LoadedMod>, dir_entries: ReadDir) -> Result<(), ModError> {
@@ -55,14 +53,21 @@ fn collect_mods(mods: &mut Vec<LoadedMod>, dir_entries: ReadDir) -> Result<(), M
     Ok(())
 }
 
+fn process_mods(mods: Vec<LoadedMod>, mut mod_registry: ModRegistry) -> Result<ModRegistry, ModError> {
+    let mods = topological_sort(mods)?;
+    assert_unique(&mods)?;
+    register_mods(&mods, &mut mod_registry)?;
+    
+    Ok(mod_registry)
+}
+
 fn assert_unique(mods: &[LoadedMod]) -> Result<(), ModError> {
     mods.iter()
         .map(|m| m.manifest.mod_id)
         .fold(Ok(CORE_MOD_ID), {|res, b|
-            if res.is_ok_and(|a| a == b) {
+            if res.is_ok_and(|a| a != b) {
                 Ok(b)
             } else if b == CORE_MOD_ID {
-
                 Err(ModError::ReservedModID { id: b.to_string() })
             } else {
                 Err(ModError::DuplicateModID { id: b.to_string() })
@@ -121,4 +126,164 @@ pub fn mods_dir() -> PathBuf {
         .parent()
         .expect("executable has no parent directory")
         .join("mods")
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{components::test_util::TestZeroHandlesComponent, glue::{load_mods::{LoadedMod, process_mods}, mod_registry::ModRegistry, test_util::{CIRCULAR_MANIFEST1, CIRCULAR_MANIFEST2, DUPLICATE_MANIFEST, RESERVED_MANIFEST, TEST_MANIFEST1, TEST_MANIFEST2, register_duplicate_tag, register_duplicate_type, register_noop, register_panic, register_test}}};
+    use crate::glue::mod_element::ModElement;
+
+    #[test]
+    fn process_one() {
+        let mut mods: Vec<LoadedMod> = Vec::new();
+        let mod_registry = ModRegistry::new();
+
+        mods.push(LoadedMod {
+            manifest: TEST_MANIFEST1,
+            register: register_test,
+        });
+
+        let mod_registry = process_mods(mods, mod_registry).unwrap();
+
+        let tags: Vec<_> = mod_registry.get_tags().cloned().collect();
+        let tag = format!("{}:{}", TEST_MANIFEST1.mod_id, TestZeroHandlesComponent::NAME);
+
+        assert!(tags.contains(&tag));
+    }
+
+    #[test]
+    fn process_chain() {
+        let mut mods: Vec<LoadedMod> = Vec::new();
+        let mod_registry = ModRegistry::new();
+
+        mods.push(LoadedMod {
+            manifest: TEST_MANIFEST2,
+            register: register_test,
+        });
+
+        mods.push(LoadedMod {
+            manifest: TEST_MANIFEST1,
+            register: register_noop,
+        });
+
+        let mod_registry = process_mods(mods, mod_registry).unwrap();
+
+        let tags: Vec<_> = mod_registry.get_tags().cloned().collect();
+        let tag = format!("{}:{}", TEST_MANIFEST2.mod_id, TestZeroHandlesComponent::NAME);
+
+        assert!(tags.contains(&tag));
+    }
+
+    #[test]
+    fn absent_dependencies() {
+        let mut mods: Vec<LoadedMod> = Vec::new();
+        let mod_registry = ModRegistry::new();
+
+        mods.push(LoadedMod {
+            manifest: CIRCULAR_MANIFEST1,
+            register: register_noop,
+        });
+
+        let err = process_mods(mods, mod_registry).unwrap_err();
+
+        println!("{err}")
+    }
+
+    #[test]
+    fn reserved_manifest() {
+        let mut mods: Vec<LoadedMod> = Vec::new();
+        let mod_registry = ModRegistry::new();
+
+        mods.push(LoadedMod {
+            manifest: RESERVED_MANIFEST,
+            register: register_noop,
+        });
+
+        let err = process_mods(mods, mod_registry).unwrap_err();
+
+        println!("{err}")
+    }
+
+    #[test]
+    fn duplicate_manifest() {
+        let mut mods: Vec<LoadedMod> = Vec::new();
+        let mod_registry = ModRegistry::new();
+
+        mods.push(LoadedMod {
+            manifest: TEST_MANIFEST1,
+            register: register_noop,
+        });
+        mods.push(LoadedMod {
+            manifest: DUPLICATE_MANIFEST,
+            register: register_noop,
+        });
+
+        let err = process_mods(mods, mod_registry).unwrap_err();
+
+        println!("{err}")
+    }
+
+    #[test]
+    fn circular_dependencies() {
+        let mut mods: Vec<LoadedMod> = Vec::new();
+        let mod_registry = ModRegistry::new();
+
+        mods.push(LoadedMod {
+            manifest: CIRCULAR_MANIFEST1,
+            register: register_noop,
+        });
+        mods.push(LoadedMod {
+            manifest: CIRCULAR_MANIFEST2,
+            register: register_noop,
+        });
+
+        let err = process_mods(mods, mod_registry).unwrap_err();
+
+        println!("{err}")
+    }
+
+    #[test]
+    fn duplicate_type() {
+        let mut mods: Vec<LoadedMod> = Vec::new();
+        let mod_registry = ModRegistry::new();
+
+        mods.push(LoadedMod {
+            manifest: TEST_MANIFEST1,
+            register: register_duplicate_type,
+        });
+
+        let err = process_mods(mods, mod_registry).unwrap_err();
+
+        println!("{err}")
+    }
+
+    #[test]
+    fn duplicate_tag() {
+        let mut mods: Vec<LoadedMod> = Vec::new();
+        let mod_registry = ModRegistry::new();
+
+        mods.push(LoadedMod {
+            manifest: TEST_MANIFEST1,
+            register: register_duplicate_tag,
+        });
+
+        let err = process_mods(mods, mod_registry).unwrap_err();
+
+        println!("{err}")
+    }
+
+    #[test]
+    fn doki_doki_panic() {
+        let mut mods: Vec<LoadedMod> = Vec::new();
+        let mod_registry = ModRegistry::new();
+
+        mods.push(LoadedMod {
+            manifest: TEST_MANIFEST1,
+            register: register_panic,
+        });
+
+        let err = process_mods(mods, mod_registry).unwrap_err();
+
+        println!("{err}")
+    }
 }

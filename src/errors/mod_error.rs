@@ -11,11 +11,11 @@ pub enum ModError {
         expected: String,
         found: String
     },
-    #[error("Mods have circular dependencies: {ids:?}")]
+    #[error("Mods have unresolved or circular dependencies: {ids:?}")]
     UnresolvedDependencies {
         ids: Vec<String>
     },
-    #[error("Registration error")]
+    #[error("Registration error for mod with id `{id}`: {source}")]
     Registration {
         id: String,
         source: Box<dyn Error>
