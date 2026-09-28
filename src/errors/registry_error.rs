@@ -1,0 +1,27 @@
+use std::any::TypeId;
+
+use thiserror::Error;
+
+use crate::glue::mod_registry::ComponentEntry;
+
+#[derive(Error, Debug)]
+pub enum RegistryError {
+    #[error("The tag `{tag}` was used to register two distinct components: {entry_first:?} and {entry_second:?}")]
+    DuplicateComponentTag {
+        tag: String,
+        entry_first: ComponentEntry,
+        entry_second: ComponentEntry
+    },
+    #[error("The component with type {id:?} was registered twice, with tags: {tag_first:?} and {tag_second:?}")]
+    DuplicateComponentType {
+        id: TypeId,
+        tag_first: String,
+        tag_second: String
+    },
+    #[error("Tried to deserialize using unknown tag `{tag:?}`")]
+    DeserializedUnknownTag {
+        tag: String
+    },
+    #[error("RonError: {0}")]
+    RonError(ron::Error)
+}

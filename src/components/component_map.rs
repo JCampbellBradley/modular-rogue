@@ -1,6 +1,5 @@
-use std::{any::TypeId, collections::HashMap, marker::PhantomData, ops::DerefMut};
+use std::{any::TypeId, collections::HashMap, ops::DerefMut};
 
-use serde::{Deserialize, Serialize, de::Visitor, ser::SerializeSeq};
 
 use crate::{components::component::{Component, ConstDispatchFn, MutDispatchFn}, errors::access_error::AccessError, events::event::{ConstEvent, MutEvent}};
 
@@ -59,77 +58,12 @@ impl ComponentMap {
     }
 }
 
-impl Serialize for ComponentMap {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer
-    {
-        let mut components = serializer.serialize_seq(Some(self.components.len()))?;
-        for v in self.components.values() {
-            components.serialize_element(v)?;
-        }
-        components.end()
-    }
-}
-
-struct VecVisitor<T> {
-    marker: PhantomData<fn() -> Vec<T>>
-}
-
-impl<T> VecVisitor<T> {
-    fn new() -> Self {
-        VecVisitor {
-            marker: PhantomData
-        }
-    }
-}
-
-impl<'de, T> Visitor<'de> for VecVisitor<T>
-where
-    T: Deserialize<'de>,
-{
-    type Value = Vec<T>;
-
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        formatter.write_str("a vec of `Component`s")
-    }
-
-    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-    where
-        A: serde::de::SeqAccess<'de>,
-    {
-        let mut vec = Vec::with_capacity(seq.size_hint().unwrap_or(0));
-        while let Some(el) = seq.next_element()? {
-            vec.push(el);
-        }
-
-        Ok(vec)
-    }
-}
-
-impl<'de> Deserialize<'de> for ComponentMap {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>
-    {
-        let vec = deserializer.deserialize_seq(VecVisitor::new())?;
-
-        let mut component_map = ComponentMap::new();
-
-        for el in vec {
-            let _ = component_map.insert(el);
-        }
-
-        Ok(component_map)
-    }
-}
-
 //-----------------------------------------------TESTS-------------------------------------------------------
 
 #[cfg(test)]
 mod tests {
 
-    use crate::components::test_util::{TestGetAttributesEvent, TestOneHandlesComponent, TestZeroHandlesComponent};
+    use crate::components::test_util::{TestOneHandlesComponent, TestZeroHandlesComponent};
 
     use super::*;
 
@@ -152,28 +86,5 @@ mod tests {
 
         assert_eq!(component_map.components.len(), 1);
         assert!(component_map.contains_key(TypeId::of::<TestZeroHandlesComponent>()));
-    }
-
-    #[test]
-    fn serialize() {
-        let mut component_map = ComponentMap::new();
-        component_map.insert(Box::new(TestOneHandlesComponent {attr1: 1, attr2: 2})).expect("");
-        component_map.insert(Box::new(TestZeroHandlesComponent {})).expect("");
-
-        let serialized = serde_json::to_string(&component_map).unwrap();
-        
-        let deserialized: ComponentMap = serde_json::from_str(&serialized).unwrap();
-
-        let mut e = TestGetAttributesEvent::default();
-
-        deserialized.dispatch(&mut e);
-
-        assert_eq!(deserialized.components.len(), 2);
-        assert!(deserialized.contains_key(TypeId::of::<TestOneHandlesComponent>()));
-        assert!(deserialized
-            .contains_key(TypeId::of::<TestZeroHandlesComponent>()));
-
-        assert_eq!(e.attr1, 1);
-        assert_eq!(e.attr2, 2);
     }
 }

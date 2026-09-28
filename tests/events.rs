@@ -12,7 +12,6 @@ impl ConstEvent for TestEvent {}
 #[handles(TestEvent)]
 struct ConstHandler {}
 
-#[typetag::serde]
 impl Component for ConstHandler {}
 
 impl HandlesConst<TestEvent> for ConstHandler {

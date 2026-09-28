@@ -13,10 +13,5 @@ pub mod stat;
 /// with the exception of stats that are constantly changing, such as `HP`.
 pub mod capped_stat;
 
-/// A dynamic modifier to a stat.
-/// 
-/// Each modifier gives a flat bonus or penalty to the stat or its cap.
-pub mod stat_modifier;
-
 #[cfg(test)]
 pub(crate) mod test_util;

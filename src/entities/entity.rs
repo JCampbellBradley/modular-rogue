@@ -1,13 +1,11 @@
 use std::any::TypeId;
 
-use serde::{Deserialize, Serialize};
 
 use crate::{components::{component::Component, component_map::ComponentMap}, errors::access_error::AccessError, events::event::{ConstEvent, MutEvent}, worlds::{position::Position, registry::{Registerable, RegistryID}}};
 
 pub type EntityId = RegistryID;
 
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(default)]
+#[derive(Debug)]
 pub struct Entity {
     id: Option<EntityId>,
     components: ComponentMap,

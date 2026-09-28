@@ -44,7 +44,6 @@ pub trait HandlesMut<T: MutEvent>: Component {
     fn handle_mut(&mut self, e: &mut T);
 }
 
-#[typetag::serde(tag = "type", content = "content")]
 pub trait Component: Any + DynamicHandlers + Debug {
     fn get_wanted_events(&self) -> Vec<TypeId> {
         self.get_handlers().iter()
@@ -61,7 +60,6 @@ pub trait Component: Any + DynamicHandlers + Debug {
 
 #[cfg(test)]
 mod tests {
-    use std::ops::Deref;
 
     use crate::components::test_util::{TestGetAttributesEvent, TestOneHandlesComponent, TestZeroHandlesComponent};
 
@@ -88,31 +86,5 @@ mod tests {
         let component = TestOneHandlesComponent::default();
         assert!(component.get_wanted_events().contains(&TypeId::of::<TestGetAttributesEvent>()));
         assert_eq!(component.get_wanted_events().len(), 1);
-    }
-
-    #[test]
-    fn serialize() {
-        let component = Box::new(TestOneHandlesComponent{
-            attr1: 1,
-            attr2: 2
-        });
-
-        let serialized = ron::to_string(&*component as &dyn Component).unwrap();
-        let deserialized: Box<dyn Component> = ron::from_str(&serialized).unwrap();
-        let downcast = (deserialized.deref() as &dyn Any).downcast_ref::<TestOneHandlesComponent>().unwrap();
-
-        assert_eq!((*deserialized).type_id(), TypeId::of::<TestOneHandlesComponent>());
-        assert_eq!(downcast.attr1, 1);
-        assert_eq!(downcast.attr2, 2);
-    }
-
-    #[test]
-    fn default_deserialization() {
-        let serialized = r#"(type: "_one_handles_component", content: ())"#;
-        let deserialized: Box<dyn Component> = ron::from_str(&serialized).unwrap();
-        let downcast = (deserialized.deref() as &dyn Any).downcast_ref::<TestOneHandlesComponent>().unwrap();
-
-        assert_eq!(downcast.attr1, 0);
-        assert_eq!(downcast.attr2, 0);
     }
 }

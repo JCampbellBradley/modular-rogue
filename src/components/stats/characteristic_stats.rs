@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use modular_rogue_macros::DynamicHandlers;
+use modular_rogue_macros::{DynamicHandlers, ModElement};
 use serde::{Deserialize, Serialize};
 
 use crate::{components::{component::{Component, HandlesConst, HandlesMut}, stats::stat::{Stat, StatCategory}}, events::{stat_change_event::StatChangeEvent, stat_collect_event::{StatCollectEvent, StatCollected}}};
@@ -27,7 +27,7 @@ pub const CHARACTERISTICS: [Characteristic; 6] = [
     Characteristic::Charisma
 ];
 
-#[derive(Serialize, Deserialize, Default, DynamicHandlers, Debug)]
+#[derive(Serialize, Deserialize, Default, DynamicHandlers, Debug, ModElement)]
 #[handles(StatCollectEvent<Characteristic>, mut StatChangeEvent<Characteristic>)]
 #[serde(default)]
 pub struct CharacteristicStats {
@@ -67,7 +67,6 @@ impl CharacteristicStats {
     }
 }
 
-#[typetag::serde(name="characteristic_stats")]
 impl Component for CharacteristicStats {}
 
 impl HandlesMut<StatChangeEvent<Characteristic>> for CharacteristicStats {

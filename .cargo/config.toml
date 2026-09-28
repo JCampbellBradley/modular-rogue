@@ -1,3 +1,7 @@
+[build]
+rustflags = ["-C", "prefer-dynamic"]
+
 [alias]
 lcov = "llvm-cov --lcov --output-path lcov.info --ignore-filename-regex (test_util|src/errors/.*)\\.rs$"
 cov = "llvm-cov --ignore-filename-regex (test_util|src/errors/.*)\\.rs$"
+xtask = "run --package xtask --"
