@@ -39,6 +39,10 @@ impl ComponentMap {
         self.components.contains_key(&t)
     }
 
+    pub fn components(&self) -> impl Iterator<Item=&dyn Component> {
+        self.components.values().map(|b| b.as_ref())
+    }
+
     pub fn dispatch<T : ConstEvent + 'static>(&self, e: &mut T ) {
         if let Some(vec)= self.component_map.get(&TypeId::of::<T>()) {
             for (t, f) in vec {

@@ -8,7 +8,7 @@ pub type EntityId = RegistryID;
 #[derive(Debug)]
 pub struct Entity {
     id: Option<EntityId>,
-    components: ComponentMap,
+    component_map: ComponentMap,
     pub zone_position: Option<Position>,
     pub position: Option<Position>
 }
@@ -19,19 +19,23 @@ impl Entity{
     }
 
     pub fn attach(&mut self, component: Box<dyn Component>) -> Result<(), AccessError<TypeId, Box<dyn Component>>> {
-        self.components.insert(component)
+        self.component_map.insert(component)
     }
 
     pub fn handle<T: ConstEvent + 'static>(&self, e: &mut T) {
-        self.components.dispatch::<T>(e);
+        self.component_map.dispatch::<T>(e);
     }
 
     pub fn handle_mut<T: MutEvent + 'static>(&mut self, e: &mut T) {
-        self.components.dispatch_mut::<T>(e);
+        self.component_map.dispatch_mut::<T>(e);
     }
 
     pub fn has_component(&self, t: TypeId) -> bool {
-        self.components.contains_key(t)
+        self.component_map.contains_key(t)
+    }
+
+    pub fn components(&self) -> impl Iterator<Item=&dyn Component> {
+        self.component_map.components()
     }
 }
 
@@ -49,7 +53,7 @@ impl Default for Entity {
     fn default() -> Self {
         Entity { 
             id: None, 
-            components: ComponentMap::new(), 
+            component_map: ComponentMap::new(), 
             zone_position: None, 
             position: None 
         }

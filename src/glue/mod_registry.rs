@@ -2,7 +2,7 @@ use std::{any::TypeId, collections::HashMap};
 
 use serde::de::DeserializeOwned;
 
-use crate::{components::component::Component, errors::{registry_error::RegistryError::{self, RonError}}, glue::mod_element::ModElement};
+use crate::{components::component::Component, errors::registry_error::RegistryError::{self}, glue::mod_element::ModElement};
 
 
 
@@ -35,12 +35,20 @@ impl ModRegistry {
         Ok(())
     }
 
+    pub fn serialize_component(&self, comp: &dyn Component) -> Result<(String, String), RegistryError> {
+        let id = comp.type_id();
+
+        if let Some(tag) = self.tags.get(&id) {
+            let serialized = ron::to_string(comp)?;
+            Ok((tag.clone(), serialized))
+        } else {
+            Err(RegistryError::SerializedUnknownType { id })
+        }
+    }
+
     pub fn deserialize_component(&self, tag: String, value: ron::Value) -> Result<Box<dyn Component>, RegistryError> {
         if let Some(entry) = self.components.get(&tag) {
-            match (entry.deserialize_fn)(value) {
-                Ok(component) => Ok(component),
-                Err(e) => Err(RonError(e))
-            }
+            Ok((entry.deserialize_fn)(value)?)
         } else {
             Err(RegistryError::DeserializedUnknownTag { tag })
         }

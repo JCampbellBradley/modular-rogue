@@ -44,7 +44,7 @@ pub trait HandlesMut<T: MutEvent>: Component {
     fn handle_mut(&mut self, e: &mut T);
 }
 
-pub trait Component: Any + DynamicHandlers + Debug {
+pub trait Component: Any + DynamicHandlers + Debug + erased_serde::Serialize {
     fn get_wanted_events(&self) -> Vec<TypeId> {
         self.get_handlers().iter()
             .map(|t| t.0)
@@ -55,6 +55,8 @@ pub trait Component: Any + DynamicHandlers + Debug {
         Priority::DEFAULT
     }
 }
+
+erased_serde::serialize_trait_object!(Component);
 
 //-----------------------------------------------TESTS-------------------------------------------------------
 

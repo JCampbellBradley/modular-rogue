@@ -18,10 +18,14 @@ pub enum RegistryError {
         tag_first: String,
         tag_second: String
     },
+    #[error("Tried to serialize using unknown type `{id:?}`")]
+    SerializedUnknownType {
+        id: TypeId
+    },
     #[error("Tried to deserialize using unknown tag `{tag:?}`")]
     DeserializedUnknownTag {
         tag: String
     },
     #[error("RonError: {0}")]
-    RonError(ron::Error)
+    RonError(#[from] ron::Error)
 }
