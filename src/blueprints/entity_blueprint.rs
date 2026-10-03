@@ -23,5 +23,23 @@ impl Bake<Entity> for EntityBlueprint {
 
 #[cfg(test)]
 mod tests {
-    
+    use std::any::{Any, TypeId};
+
+use crate::{blueprints::entity_blueprint::EntityBlueprint, components::test_util::TestOneHandlesComponent, mod_registry::{bake::Bake, test_util::reg_with_test_components}};
+
+    #[test]
+    fn n() {
+        let reg = reg_with_test_components();
+
+        let ron_bp = r#"EntityBlueprint(components: {"test:_one_handles_component": (attr2:3)})"#;
+        let blueprint: EntityBlueprint = ron::from_str(ron_bp).unwrap();
+        let ent = blueprint.bake(&reg).unwrap();
+
+        let comp = (ent.get_component(TypeId::of::<TestOneHandlesComponent>()).unwrap() as &dyn Any)
+            .downcast_ref::<TestOneHandlesComponent>()
+            .unwrap();
+
+        assert_eq!(comp.attr2, 3);
+        assert_eq!(comp.attr1, 0);
+    }
 }

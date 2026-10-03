@@ -1,4 +1,4 @@
-use crate::{components::test_util::{DuplicateTagComponent, TestZeroHandlesComponent}, errors::registry_error::RegistryError, mod_registry::registry::{ModContext, ModManifest}};
+use crate::{components::test_util::{DuplicateTagComponent, TestOneHandlesComponent, TestZeroHandlesComponent}, errors::registry_error::RegistryError, mod_registry::registry::{ModContext, ModManifest, ModRegistry}};
 
 pub const TEST_MANIFEST1: ModManifest = ModManifest {
     mod_id: "test1",
@@ -62,4 +62,15 @@ pub fn register_duplicate_tag(ctx: &mut ModContext<'_>) -> Result<(), RegistryEr
 
 pub fn register_panic(_ctx: &mut ModContext<'_>) -> Result<(), RegistryError> {
     panic!()
+}
+
+pub fn reg_with_test_components() -> ModRegistry {
+    let mut reg = ModRegistry::new();
+    let mod_id = "test";
+    let mut ctx = reg.build_context(mod_id);
+
+    ctx.register_component::<TestZeroHandlesComponent>().unwrap();
+    ctx.register_component::<TestOneHandlesComponent>().unwrap();
+
+    reg
 }

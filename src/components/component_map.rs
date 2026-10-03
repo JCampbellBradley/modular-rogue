@@ -39,6 +39,10 @@ impl ComponentMap {
         self.components.contains_key(&t)
     }
 
+    pub fn get(&self, t: TypeId) -> Option<&dyn Component> {
+        self.components.get(&t).map(|comp| comp.as_ref())
+    }
+
     pub fn components(&self) -> impl Iterator<Item=&dyn Component> {
         self.components.values().map(|b| b.as_ref())
     }
