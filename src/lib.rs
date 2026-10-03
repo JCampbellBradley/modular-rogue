@@ -7,10 +7,10 @@ pub mod util;
 pub mod worlds;
 pub mod errors;
 pub mod blueprints;
-pub mod glue;
+pub mod mod_registry;
 
 
-pub use glue::core_mod::MR_COMPONENTS;
+pub use mod_registry::core_mod::MR_COMPONENTS;
 
 pub use ron;
 pub use linkme;

@@ -2,7 +2,7 @@ use std::any::TypeId;
 
 use thiserror::Error;
 
-use crate::glue::mod_registry::ComponentEntry;
+use crate::mod_registry::registry::ComponentEntry;
 
 #[derive(Error, Debug)]
 pub enum RegistryError {

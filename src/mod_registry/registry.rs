@@ -2,7 +2,7 @@ use std::{any::TypeId, collections::HashMap};
 
 use serde::de::DeserializeOwned;
 
-use crate::{components::component::Component, errors::registry_error::RegistryError::{self}, glue::mod_element::ModElement};
+use crate::{components::component::Component, errors::registry_error::RegistryError::{self}, mod_registry::mod_element::ModElement};
 
 
 

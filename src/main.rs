@@ -1,4 +1,4 @@
-use modular_rogue::glue::{core_mod::mr_register, load_mods::{load_mods, mods_dir}, mod_registry::ModRegistry};
+use modular_rogue::mod_registry::{core_mod::mr_register, load_mods::{load_mods, mods_dir}, registry::ModRegistry};
 
 
 

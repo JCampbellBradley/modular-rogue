@@ -1,4 +1,4 @@
-use crate::{components::test_util::{DuplicateTagComponent, TestZeroHandlesComponent}, errors::registry_error::RegistryError, glue::mod_registry::{ModContext, ModManifest}};
+use crate::{components::test_util::{DuplicateTagComponent, TestZeroHandlesComponent}, errors::registry_error::RegistryError, mod_registry::registry::{ModContext, ModManifest}};
 
 pub const TEST_MANIFEST1: ModManifest = ModManifest {
     mod_id: "test1",

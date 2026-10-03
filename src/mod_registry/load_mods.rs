@@ -2,7 +2,7 @@ use std::{collections::HashSet, env::consts::DLL_SUFFIX, ffi::CStr, fs::{self, R
 
 use libloading::Library;
 
-use crate::{errors::{mod_error::ModError, registry_error::RegistryError}, glue::{core_mod::CORE_MOD_ID, engine::ENGINE_BUILD_ID, mod_registry::{ModContext, ModManifest, ModRegistry}}};
+use crate::{errors::{mod_error::ModError, registry_error::RegistryError}, mod_registry::{core_mod::CORE_MOD_ID, engine::ENGINE_BUILD_ID, registry::{ModContext, ModManifest, ModRegistry}}};
 
 struct LoadedMod {
     pub manifest: ModManifest,
@@ -130,8 +130,8 @@ pub fn mods_dir() -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use crate::{components::test_util::TestZeroHandlesComponent, glue::{load_mods::{LoadedMod, process_mods}, mod_registry::ModRegistry, test_util::{CIRCULAR_MANIFEST1, CIRCULAR_MANIFEST2, DUPLICATE_MANIFEST, RESERVED_MANIFEST, TEST_MANIFEST1, TEST_MANIFEST2, register_duplicate_tag, register_duplicate_type, register_noop, register_panic, register_test}}};
-    use crate::glue::mod_element::ModElement;
+    use crate::{components::test_util::TestZeroHandlesComponent, mod_registry::{load_mods::{LoadedMod, process_mods}, registry::ModRegistry, test_util::{CIRCULAR_MANIFEST1, CIRCULAR_MANIFEST2, DUPLICATE_MANIFEST, RESERVED_MANIFEST, TEST_MANIFEST1, TEST_MANIFEST2, register_duplicate_tag, register_duplicate_type, register_noop, register_panic, register_test}}};
+    use crate::mod_registry::mod_element::ModElement;
 
     #[test]
     fn process_one() {

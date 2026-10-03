@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{entities::entity::Entity, errors::bake_error::BakeError, glue::{bake::{Bake, Unbake}, mod_registry::ModRegistry}, worlds::{position::Position, registry::{Registerable, RegistryID}}};
+use crate::{entities::entity::Entity, errors::bake_error::BakeError, mod_registry::{bake::{Bake, Unbake}, registry::ModRegistry}, worlds::{position::Position, registry::{Registerable, RegistryID}}};
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct EntityRaw {

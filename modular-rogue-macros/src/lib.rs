@@ -107,10 +107,10 @@ pub fn mod_component_macro(item: TokenStream) -> TokenStream {
 
     quote! {
         #[linkme::distributed_slice(crate::MR_COMPONENTS)]
-        static #mr_name_ident: #path::glue::load_mods::RegisterFn = |ctx| ctx.register_component::<#ident>();
+        static #mr_name_ident: #path::mod_registry::load_mods::RegisterFn = |ctx| ctx.register_component::<#ident>();
 
         #[automatically_derived]
-        impl #path::glue::mod_element::ModElement for #ident {
+        impl #path::mod_registry::mod_element::ModElement for #ident {
             const NAME: &'static str = #name;
         }
     }.into()

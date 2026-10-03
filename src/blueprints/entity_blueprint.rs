@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
-use crate::{entities::entity::Entity, errors::{bake_error::BakeError}, glue::{bake::Bake, mod_registry::ModRegistry}};
+use crate::{entities::entity::Entity, errors::{bake_error::BakeError}, mod_registry::{bake::Bake, registry::ModRegistry}};
 
 #[derive(Debug, Deserialize)]
 pub struct EntityBlueprint {

@@ -1,4 +1,4 @@
-pub mod mod_registry;
+pub mod registry;
 pub mod load_mods;
 pub mod engine;
 pub mod declare_mod;

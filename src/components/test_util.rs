@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use crate::{components::component::{Component, HandlesConst}, events::event::{ConstEvent, Event}};
 
 
-
 #[derive(Serialize, Deserialize, DynamicHandlers, Debug, Default, ModElement)]
 #[handles()]
 #[serde(default)]
