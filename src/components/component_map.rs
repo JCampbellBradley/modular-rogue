@@ -1,4 +1,4 @@
-use std::{any::TypeId, collections::HashMap, ops::DerefMut};
+use std::{any::{Any, TypeId}, collections::HashMap, ops::DerefMut};
 
 
 use crate::{components::component::{Component, ConstDispatchFn, MutDispatchFn}, errors::access_error::AccessError, events::event::{ConstEvent, MutEvent}};
@@ -39,8 +39,11 @@ impl ComponentMap {
         self.components.contains_key(&t)
     }
 
-    pub fn get(&self, t: TypeId) -> Option<&dyn Component> {
-        self.components.get(&t).map(|comp| comp.as_ref())
+    pub fn get<T: Component>(&self) -> Option<&T> {
+        self.components.get(&TypeId::of::<T>())
+            .map(|comp| comp.as_ref())
+            .map(|comp| (comp as &dyn Any).downcast_ref::<T>())
+            .flatten()
     }
 
     pub fn components(&self) -> impl Iterator<Item=&dyn Component> {
@@ -78,8 +81,8 @@ mod tests {
     #[test]
     fn insert() {
         let mut component_map = ComponentMap::new();
-        component_map.insert(Box::new(TestOneHandlesComponent {attr1: 1, attr2: 2})).expect("");
-        component_map.insert(Box::new(TestZeroHandlesComponent {})).expect("");
+        component_map.insert(Box::new(TestOneHandlesComponent {attr1: 1, attr2: 2})).unwrap();
+        component_map.insert(Box::new(TestZeroHandlesComponent {})).unwrap();
 
         assert_eq!(component_map.components.len(), 2);
         assert!(component_map.contains_key(TypeId::of::<TestOneHandlesComponent>()));
@@ -89,10 +92,21 @@ mod tests {
     #[test]
     fn double_insert() {
         let mut component_map = ComponentMap::new();
-        component_map.insert(Box::new(TestZeroHandlesComponent {})).expect("");
+        component_map.insert(Box::new(TestZeroHandlesComponent {})).unwrap();
         assert!(component_map.insert(Box::new(TestZeroHandlesComponent {})).is_err());
 
         assert_eq!(component_map.components.len(), 1);
         assert!(component_map.contains_key(TypeId::of::<TestZeroHandlesComponent>()));
+    }
+
+    #[test]
+    fn get() {
+        let mut component_map = ComponentMap::new();
+        component_map.insert(Box::new(TestOneHandlesComponent {attr1: 1, attr2: 2})).unwrap();
+        component_map.insert(Box::new(TestZeroHandlesComponent {})).unwrap();
+
+        let comp = component_map.get::<TestOneHandlesComponent>().unwrap();
+
+        assert!(comp.attr2 == 2);
     }
 }

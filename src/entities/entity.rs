@@ -34,8 +34,8 @@ impl Entity{
         self.component_map.contains_key(t)
     }
 
-    pub fn get_component(&self, t: TypeId) -> Option<&dyn Component> {
-        self.component_map.get(t)
+    pub fn get_component<T: Component>(&self) -> Option<&T> {
+        self.component_map.get::<T>()
     }
 
     pub fn components(&self) -> impl Iterator<Item=&dyn Component> {
