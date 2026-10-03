@@ -13,8 +13,9 @@ pub enum AccessError<A, I> {
         item: I,
         index: A
     },
-    #[error("Item {item:?} could not be added, as it was already present.")]
+    #[error("Item `{added:?}` could not be added, as item `{present:?}` was already present.")]
     BadAdd {
-        item: I
+        added: I,
+        present: I
     }
 }

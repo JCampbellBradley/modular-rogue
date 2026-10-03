@@ -1,9 +1,8 @@
-use std::any::TypeId;
 
 use ron::de::SpannedError;
 use thiserror::Error;
 
-use crate::{components::component::Component, errors::{access_error::AccessError, registry_error::RegistryError}};
+use crate::errors::{entity_error::EntityError, registry_error::RegistryError};
 
 #[derive(Error, Debug)]
 pub enum BakeError {
@@ -14,5 +13,5 @@ pub enum BakeError {
     #[error("{0:?}")]
     RegistryError(#[from] RegistryError),
     #[error("{0:?}")]
-    ComponentAccessError(#[from] AccessError<TypeId, Box<dyn Component>>)
+    EntityError(#[from] EntityError)
 }

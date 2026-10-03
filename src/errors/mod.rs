@@ -3,3 +3,4 @@ pub mod access_error;
 pub mod bake_error;
 pub mod mod_error;
 pub mod registry_error;
+pub mod entity_error;

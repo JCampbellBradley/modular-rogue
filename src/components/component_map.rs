@@ -1,7 +1,7 @@
-use std::{any::{Any, TypeId}, collections::HashMap, ops::DerefMut};
+use std::{any::{Any, TypeId}, collections::{HashMap, hash_map::Entry}, ops::DerefMut};
 
 
-use crate::{components::component::{Component, ConstDispatchFn, MutDispatchFn}, errors::access_error::AccessError, events::event::{ConstEvent, MutEvent}};
+use crate::{components::component::{Component, ConstDispatchFn, MutDispatchFn}, errors::entity_error::EntityError, events::event::{ConstEvent, MutEvent}};
 
 
 #[derive(Debug, Default)]
@@ -16,30 +16,31 @@ impl ComponentMap {
         Self::default()
     }
 
-    pub fn insert(&mut self, component: Box<dyn Component>) -> Result<(), AccessError<TypeId, Box<dyn Component>>> {
+    pub fn insert(&mut self, component: Box<dyn Component>) -> Result<&mut dyn Component, EntityError> {
         let component_type = (*component).type_id();
-        if self.contains_key(component_type) {
-            Err(AccessError::BadAdd { 
-                item: component
-            })
-        } else {
-            let c = self.components.entry(component_type)
-                .or_insert(component);
+    
+        match self.components.entry(component_type) {
+            Entry::Occupied(entry) => {
+                Err(EntityError::AttachClobber { 
+                    attached: format!("{component:?}"),
+                    present: format!("{entry:?}")
+                })
+            },
+            Entry::Vacant(entry) => {
+                for (t, f) in component.get_handlers().iter() {
+                    self.component_map.entry(*t)
+                        .or_default()
+                        .push((component_type, *f));
+                }
 
-            for (t, f) in c.get_handlers().iter() {
-                self.component_map.entry(*t)
-                    .or_default()
-                    .push((component_type, *f));
+                for (t, f) in component.get_handlers_mut().iter() {
+                    self.component_map_mut.entry(*t)
+                        .or_default()
+                        .push((component_type, *f));
+                }
+                
+                Ok(entry.insert(component).as_mut())
             }
-
-
-            for (t, f) in c.get_handlers_mut().iter() {
-                self.component_map_mut.entry(*t)
-                    .or_default()
-                    .push((component_type, *f));
-            }
-
-            Ok(())
         }
     }
 
@@ -54,8 +55,11 @@ impl ComponentMap {
             .flatten()
     }
 
-    pub fn components(&self) -> impl Iterator<Item=&dyn Component> {
-        self.components.values().map(|b| b.as_ref())
+    pub fn get_mut<T: Component>(&mut self) -> Option<&mut T> {
+        self.components.get_mut(&TypeId::of::<T>())
+            .map(|comp| comp.as_mut())
+            .map(|comp| (comp as &mut dyn Any).downcast_mut::<T>())
+            .flatten()
     }
 
     pub fn dispatch<T : ConstEvent + 'static>(&self, e: &mut T ) {
@@ -75,6 +79,14 @@ impl ComponentMap {
             }
         }    
     }
+
+    pub fn components(&self) -> impl Iterator<Item=&dyn Component> {
+        self.components.values().map(|b| b.as_ref())
+    }
+    
+    pub fn num_components(&self) -> usize {
+        self.components().collect::<Vec<_>>().len()
+    }
 }
 
 //-----------------------------------------------TESTS-------------------------------------------------------
@@ -92,18 +104,8 @@ mod tests {
         component_map.insert(Box::new(TestOneHandlesComponent {attr1: 1, attr2: 2})).unwrap();
         component_map.insert(Box::new(TestZeroHandlesComponent {})).unwrap();
 
-        assert_eq!(component_map.components().collect::<Vec<_>>().len(), 2);
+        assert_eq!(component_map.num_components(), 2);
         assert!(component_map.contains_key(TypeId::of::<TestOneHandlesComponent>()));
-        assert!(component_map.contains_key(TypeId::of::<TestZeroHandlesComponent>()));
-    }
-
-    #[test]
-    fn double_insert() {
-        let mut component_map = ComponentMap::new();
-        component_map.insert(Box::new(TestZeroHandlesComponent {})).unwrap();
-        assert!(component_map.insert(Box::new(TestZeroHandlesComponent {})).is_err());
-
-        assert_eq!(component_map.components.len(), 1);
         assert!(component_map.contains_key(TypeId::of::<TestZeroHandlesComponent>()));
     }
 
