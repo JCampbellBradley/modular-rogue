@@ -68,5 +68,4 @@ impl Default for Entity {
 
 #[cfg(test)]
 mod tests {
-
 }

@@ -29,8 +29,16 @@ impl ComponentMap {
             for (t, f) in c.get_handlers().iter() {
                 self.component_map.entry(*t)
                     .or_default()
-                    .push((component_type, *f))
+                    .push((component_type, *f));
             }
+
+
+            for (t, f) in c.get_handlers_mut().iter() {
+                self.component_map_mut.entry(*t)
+                    .or_default()
+                    .push((component_type, *f));
+            }
+
             Ok(())
         }
     }
@@ -74,7 +82,7 @@ impl ComponentMap {
 #[cfg(test)]
 mod tests {
 
-    use crate::components::test_util::{TestOneHandlesComponent, TestZeroHandlesComponent};
+    use crate::components::test_util::{TestGetAttributesEvent, TestOneHandlesComponent, TestSetAttributesEvent, TestZeroHandlesComponent};
 
     use super::*;
 
@@ -84,7 +92,7 @@ mod tests {
         component_map.insert(Box::new(TestOneHandlesComponent {attr1: 1, attr2: 2})).unwrap();
         component_map.insert(Box::new(TestZeroHandlesComponent {})).unwrap();
 
-        assert_eq!(component_map.components.len(), 2);
+        assert_eq!(component_map.components().collect::<Vec<_>>().len(), 2);
         assert!(component_map.contains_key(TypeId::of::<TestOneHandlesComponent>()));
         assert!(component_map.contains_key(TypeId::of::<TestZeroHandlesComponent>()));
     }
@@ -108,5 +116,47 @@ mod tests {
         let comp = component_map.get::<TestOneHandlesComponent>().unwrap();
 
         assert!(comp.attr2 == 2);
+    }
+
+    #[test]
+    fn dispatch() {
+        let mut component_map = ComponentMap::new();
+        component_map.insert(Box::new(TestOneHandlesComponent {attr1: 1, attr2: 2})).unwrap();
+
+        let mut getter = TestGetAttributesEvent::default();
+
+        component_map.dispatch(&mut getter);
+
+        assert_eq!(getter.attr1, 1);
+    }
+
+    #[test]
+    fn dispatch_mut() {
+        let mut component_map = ComponentMap::new();
+        component_map.insert(Box::new(TestOneHandlesComponent {attr1: 0, attr2: 0})).unwrap();
+
+        let mut setter = TestSetAttributesEvent {attr1: 3, attr2:0};
+
+        component_map.dispatch_mut(&mut setter);
+
+        assert_eq!(setter.attr1, 3);
+    }
+
+    #[test]
+    fn dispatch_noop() {
+        let component_map = ComponentMap::new();
+
+        let mut getter = TestGetAttributesEvent::default();
+
+        component_map.dispatch(&mut getter);
+    }
+
+    #[test]
+    fn dispatch_mut_noop() {
+        let mut component_map = ComponentMap::new();
+
+        let mut setter = TestSetAttributesEvent {attr1: 3, attr2:0};
+
+        component_map.dispatch_mut(&mut setter);
     }
 }
