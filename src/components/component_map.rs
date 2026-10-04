@@ -30,26 +30,29 @@ impl ComponentMap {
                 for (t, f) in component.get_handlers().iter() {
                     let handlers = self.component_map.entry(*t)
                         .or_default();
+                    let item = (component.get_priority(), component_type, *f);
                         
-                    handlers.push((component.get_priority(), component_type, *f));
-                    handlers.sort_by(|a, b|
-                        b.0.cmp(&a.0)
-                    );
+                    Self::push_and_sort::<ConstDispatchFn>(handlers, item);
                 }
 
                 for (t, f) in component.get_handlers_mut().iter() {
                     let handlers = self.component_map_mut.entry(*t)
                         .or_default();
+                    let item = (component.get_priority(), component_type, *f);
                         
-                    handlers.push((component.get_priority(), component_type, *f));
-                    handlers.sort_by(|a, b|
-                        b.0.cmp(&a.0)
-                    );
+                    Self::push_and_sort::<MutDispatchFn>(handlers, item);
                 }
                 
                 Ok(entry.insert(component).as_mut())
             }
         }
+    }
+
+    fn push_and_sort<T>(handlers: &mut Vec<(Priority, TypeId, T)>, item: (Priority, TypeId, T)) {
+        handlers.push(item);
+        handlers.sort_by(|a, b|
+            b.0.cmp(&a.0)
+        );
     }
 
     pub fn contains_key(&self, t: TypeId) -> bool {
