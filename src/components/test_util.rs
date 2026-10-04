@@ -3,7 +3,7 @@ use std::any::TypeId;
 use modular_rogue_macros::{DynamicHandlers, ModElement};
 use serde::{Deserialize, Serialize};
 
-use crate::{components::component::{Component, HandlesConst, HandlesMut, Priority}, events::event::{ConstEvent, Event, MutEvent}};
+use crate::{components::component::{Component, HandlesConst, HandlesMut, Priority}, events::event::{ConstEvent, Event, MutEvent}, mod_registry::mod_element::ModElement};
 
 
 #[derive(Serialize, Deserialize, DynamicHandlers, Debug, Default, ModElement)]
@@ -65,11 +65,14 @@ impl HandlesConst<TestPriorityEvent> for TestStatefulComponent {
     }
 }
 
-#[derive(Serialize, Deserialize, DynamicHandlers, Debug, Default, ModElement)]
+#[derive(Serialize, Deserialize, DynamicHandlers, Debug, Default)]
 #[serde(default)]
-#[component(name = "_stateless_component")]
 pub struct DuplicateTagComponent {}
 impl Component for DuplicateTagComponent {}
+
+impl ModElement for DuplicateTagComponent {
+    const NAME: &'static str = "_stateless_component";
+}
 
 #[derive(Default)]
 pub struct TestGetAttributesEvent {
