@@ -27,5 +27,7 @@ pub enum RegistryError {
         tag: String
     },
     #[error("RonError: {0}")]
-    RonError(#[from] ron::Error)
+    RonError(#[from] ron::Error),
+    #[error("SpannedError: {0}")]
+    SpannedError(#[from] ron::error::SpannedError)
 }

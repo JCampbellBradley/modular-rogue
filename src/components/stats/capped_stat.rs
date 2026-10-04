@@ -23,6 +23,13 @@ impl CappedStat {
         CappedStat::default()
     }
 
+    pub fn build(base: i32, cap: i32) -> Self {
+        CappedStat {
+            base: min(base, cap), 
+            cap
+        }
+    }
+
     pub fn get(&self) -> i32 {
         self.base
     }
@@ -43,10 +50,7 @@ impl CappedStat {
 
 impl From<(i32, i32)> for CappedStat {
     fn from(value: (i32, i32)) -> Self {
-        CappedStat {
-            base: value.0, 
-            cap: value.1
-        }
+        Self::build(value.0, value.1)
     }
 }
 
@@ -57,9 +61,9 @@ impl<'de> Deserialize<'de> for CappedStat {
     {
         let repr = CappedStatRepr::deserialize(deserializer)?;
         let stat = match repr {
-            CappedStatRepr::Short(base) => CappedStat::from(base),
+            CappedStatRepr::Short(short) => CappedStat::from(short),
             CappedStatRepr::Full {base, cap} 
-                => CappedStat {base, cap}
+                => CappedStat::build(base, cap)
         };
         Ok(stat)
     }
@@ -100,5 +104,48 @@ use super::*;
 
         assert_eq!(stat.get(), 0);
         assert_eq!(stat.get_cap(), 1);
+    }
+    
+    #[test]
+    fn from() {
+        let stat: CappedStat = (1, 2).into();
+
+        assert_eq!(stat.base, 1);
+        assert_eq!(stat.cap, 2);
+    }
+    
+    #[test]
+    fn from_capped() {
+        let stat: CappedStat = (3, 2).into();
+
+        assert_eq!(stat.base, 2);
+        assert_eq!(stat.cap, 2);
+    }
+    
+    #[test]
+    fn serde() {
+        let stat = CappedStat {base: 1, cap: 2};
+
+        let serialized = ron::to_string(&stat).unwrap();
+        let deserialized: CappedStat = ron::from_str(&serialized).unwrap();
+
+        assert_eq!(deserialized.base, 1);
+        assert_eq!(deserialized.cap, 2);
+    }
+    
+    #[test]
+    fn deserialize_short() {
+        let deserialized: CappedStat = ron::from_str("(1,2)").unwrap();
+
+        assert_eq!(deserialized.base, 1);
+        assert_eq!(deserialized.cap, 2);
+    }
+    
+    #[test]
+    fn deserialize_capped() {
+        let deserialized: CappedStat = ron::from_str("(3,2)").unwrap();
+
+        assert_eq!(deserialized.base, 2);
+        assert_eq!(deserialized.cap, 2);
     }
 }

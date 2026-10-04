@@ -20,6 +20,12 @@ impl Stat {
         Stat::default()
     }
 
+    pub fn build(base: i32) -> Self {
+        Stat {
+            base
+        }
+    }
+
     pub fn get(&self) -> i32 {
         self.base
     }
@@ -57,16 +63,40 @@ mod tests {
 
     #[test]
     fn get() {
-        let stat = Stat {base: 1};
+        let stat = Stat::new();
 
-        assert_eq!(stat.get(), 1);
+        assert_eq!(stat.get(), 0);
     }
 
     #[test]
     fn set() {
-        let mut stat = Stat {base: 1};
+        let mut stat = Stat::build(1);
         stat.set(3);
 
         assert_eq!(stat.get(), 3);
+    }
+    
+    #[test]
+    fn from() {
+        let stat: Stat = 1.into();
+
+        assert_eq!(stat.base, 1);
+    }
+    
+    #[test]
+    fn serde() {
+        let stat = Stat::build(1);
+
+        let serialized = ron::to_string(&stat).unwrap();
+        let deserialized: Stat = ron::from_str(&serialized).unwrap();
+
+        assert_eq!(deserialized.base, 1);
+    }
+    
+    #[test]
+    fn deserialize_short() {
+        let deserialized: Stat = ron::from_str("1").unwrap();
+
+        assert_eq!(deserialized.base, 1);
     }
 }

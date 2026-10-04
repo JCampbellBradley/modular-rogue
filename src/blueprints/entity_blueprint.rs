@@ -6,11 +6,12 @@ use serde::Deserialize;
 use crate::{entities::entity::Entity, errors::{bake_error::BakeError}, mod_registry::{bake::Bake, registry::ModRegistry}};
 
 #[derive(Debug, Deserialize)]
-pub struct EntityBlueprint {
-    components: HashMap<String, ron::Value>,
+pub struct EntityBlueprint<'a> {
+    #[serde(borrow)]
+    components: HashMap<String, &'a ron::value::RawValue>,
 }
 
-impl Bake<Entity> for EntityBlueprint {
+impl Bake<Entity> for EntityBlueprint<'_> {
     fn bake(self, reg: &ModRegistry) -> Result<Entity, BakeError> {
         let mut entity = Entity::new();
         for (tag, value) in self.components {

@@ -1,5 +1,6 @@
 use std::{any::TypeId, collections::HashMap};
 
+use ron::value::RawValue;
 use serde::de::DeserializeOwned;
 
 use crate::{components::component::Component, errors::registry_error::RegistryError::{self}, mod_registry::mod_element::ModElement};
@@ -35,18 +36,17 @@ impl ModRegistry {
         Ok(())
     }
 
-    pub fn serialize_component(&self, comp: &dyn Component) -> Result<(String, String), RegistryError> {
+    pub fn serialize_component(&self, comp: &dyn Component) -> Result<(String, Box<ron::value::RawValue>), RegistryError> {
         let id = comp.type_id();
 
         if let Some(tag) = self.tags.get(&id) {
-            let serialized = ron::to_string(comp)?;
-            Ok((tag.clone(), serialized))
+            Ok((tag.clone(), RawValue::from_rust(&Box::new(comp))?))
         } else {
             Err(RegistryError::SerializedUnknownType { id })
         }
     }
 
-    pub fn deserialize_component(&self, tag: String, value: ron::Value) -> Result<Box<dyn Component>, RegistryError> {
+    pub fn deserialize_component(&self, tag: String, value: &ron::value::RawValue) -> Result<Box<dyn Component>, RegistryError> {
         if let Some(entry) = self.components.get(&tag) {
             Ok((entry.deserialize_fn)(value)?)
         } else {
@@ -94,9 +94,9 @@ pub struct ModManifest {
     pub dependencies: &'static [&'static str],
 }
 
-type DeserializeFn = fn(ron::Value) -> Result<Box<dyn Component>, ron::Error>;
+type DeserializeFn = fn(&ron::value::RawValue) -> Result<Box<dyn Component>, ron::Error>;
 
-fn deserialize_as<C: Component + DeserializeOwned>(v: ron::Value)
+fn deserialize_as<C: Component + DeserializeOwned>(v: &ron::value::RawValue)
     -> Result<Box<dyn Component>, ron::Error>
 {
     Ok(Box::new(v.into_rust::<C>()?))
@@ -134,7 +134,7 @@ use super::*;
 
         let tag = format!("{mod_id}:{}", TestStatefulComponent::NAME);
 
-        let value: ron::Value = ron::from_str("(attr2: 2)").unwrap();
+        let value: &ron::value::RawValue = ron::from_str("(attr2: 2)").unwrap();
 
         let mut component = reg.deserialize_component(tag, value).unwrap();
         let downcast = (component.deref_mut() as &dyn Any).downcast_ref::<TestStatefulComponent>().unwrap();
@@ -176,7 +176,7 @@ use super::*;
         ctx.register_component::<TestStatefulComponent>().unwrap();
 
         let tag = format!("{mod_id}:{}", TestStatefulComponent::NAME);
-        let value: ron::Value = ron::from_str("(attr2: a)").unwrap();
+        let value: &ron::value::RawValue = ron::from_str("(attr2: a)").unwrap();
 
         let err = reg.deserialize_component(tag, value).unwrap_err();
 
@@ -190,7 +190,7 @@ use super::*;
 
         let tag = format!("{mod_id}:{}", TestStatefulComponent::NAME);
 
-        let value: ron::Value = ron::from_str("(attr2: 2)").unwrap();
+        let value: &ron::value::RawValue = ron::from_str("(attr2: 2)").unwrap();
 
         let err = reg.deserialize_component(tag, value).unwrap_err();
 
