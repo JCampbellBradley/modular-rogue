@@ -1,4 +1,4 @@
-use crate::{components::test_util::{DuplicateTagComponent, TestOneHandlesComponent, TestZeroHandlesComponent}, errors::registry_error::RegistryError, mod_registry::registry::{ModContext, ModManifest, ModRegistry}};
+use crate::{components::test_util::{DuplicateTagComponent, TestStatefulComponent, TestStatelessComponent}, errors::registry_error::RegistryError, mod_registry::registry::{ModContext, ModManifest, ModRegistry}};
 
 pub const TEST_MANIFEST1: ModManifest = ModManifest {
     mod_id: "test1",
@@ -41,20 +41,20 @@ pub fn register_noop(_ctx: &mut ModContext<'_>) -> Result<(), RegistryError> {
 }
 
 pub fn register_test(ctx: &mut ModContext<'_>) -> Result<(), RegistryError> {
-    ctx.register_component::<TestZeroHandlesComponent>()?;
+    ctx.register_component::<TestStatelessComponent>()?;
 
     Ok(())
 }
 
 pub fn register_duplicate_type(ctx: &mut ModContext<'_>) -> Result<(), RegistryError> {
-    ctx.register_component::<TestZeroHandlesComponent>()?;
-    ctx.register_component::<TestZeroHandlesComponent>()?;
+    ctx.register_component::<TestStatelessComponent>()?;
+    ctx.register_component::<TestStatelessComponent>()?;
 
     Ok(())
 }
 
 pub fn register_duplicate_tag(ctx: &mut ModContext<'_>) -> Result<(), RegistryError> {
-    ctx.register_component::<TestZeroHandlesComponent>()?;
+    ctx.register_component::<TestStatelessComponent>()?;
     ctx.register_component::<DuplicateTagComponent>()?;
 
     Ok(())
@@ -69,8 +69,8 @@ pub fn reg_with_test_components() -> ModRegistry {
     let mod_id = "test";
     let mut ctx = reg.build_context(mod_id);
 
-    ctx.register_component::<TestZeroHandlesComponent>().unwrap();
-    ctx.register_component::<TestOneHandlesComponent>().unwrap();
+    ctx.register_component::<TestStatelessComponent>().unwrap();
+    ctx.register_component::<TestStatefulComponent>().unwrap();
 
     reg
 }

@@ -106,7 +106,7 @@ fn deserialize_as<C: Component + DeserializeOwned>(v: ron::Value)
 mod tests {
     use std::{any::Any, ops::DerefMut};
 
-use crate::components::test_util::{DuplicateTagComponent, TestOneHandlesComponent, TestZeroHandlesComponent};
+use crate::components::test_util::{DuplicateTagComponent, TestStatefulComponent, TestStatelessComponent};
 
 use super::*;
 
@@ -116,10 +116,10 @@ use super::*;
         let mod_id = "mod_id";
         let mut ctx = reg.build_context(mod_id);
 
-        ctx.register_component::<TestZeroHandlesComponent>().unwrap();
+        ctx.register_component::<TestStatelessComponent>().unwrap();
 
         let tags: Vec<&String> = reg.get_tags().collect();
-        let tag = format!("{mod_id}:{}", TestZeroHandlesComponent::NAME);
+        let tag = format!("{mod_id}:{}", TestStatelessComponent::NAME);
 
         assert!(tags.contains(&&tag));
     }
@@ -130,14 +130,14 @@ use super::*;
         let mod_id = "mod_id";
         let mut ctx = reg.build_context(mod_id);
 
-        ctx.register_component::<TestOneHandlesComponent>().unwrap();
+        ctx.register_component::<TestStatefulComponent>().unwrap();
 
-        let tag = format!("{mod_id}:{}", TestOneHandlesComponent::NAME);
+        let tag = format!("{mod_id}:{}", TestStatefulComponent::NAME);
 
         let value: ron::Value = ron::from_str("(attr2: 2)").unwrap();
 
         let mut component = reg.deserialize_component(tag, value).unwrap();
-        let downcast = (component.deref_mut() as &dyn Any).downcast_ref::<TestOneHandlesComponent>().unwrap();
+        let downcast = (component.deref_mut() as &dyn Any).downcast_ref::<TestStatefulComponent>().unwrap();
         
         assert_eq!(downcast.attr1, 0);
         assert_eq!(downcast.attr2, 2);
@@ -149,8 +149,8 @@ use super::*;
         let mod_id = "mod_id";
         let mut ctx = reg.build_context(mod_id);
 
-        ctx.register_component::<TestZeroHandlesComponent>().unwrap();
-        let err = ctx.register_component::<TestZeroHandlesComponent>().unwrap_err();
+        ctx.register_component::<TestStatelessComponent>().unwrap();
+        let err = ctx.register_component::<TestStatelessComponent>().unwrap_err();
 
         println!("{err}");
     }
@@ -161,7 +161,7 @@ use super::*;
         let mod_id = "mod_id";
         let mut ctx = reg.build_context(mod_id);
 
-        ctx.register_component::<TestZeroHandlesComponent>().unwrap();
+        ctx.register_component::<TestStatelessComponent>().unwrap();
         let err = ctx.register_component::<DuplicateTagComponent>().unwrap_err();
 
         println!("{err}");
@@ -173,9 +173,9 @@ use super::*;
         let mod_id = "mod_id";
         let mut ctx = reg.build_context(mod_id);
 
-        ctx.register_component::<TestOneHandlesComponent>().unwrap();
+        ctx.register_component::<TestStatefulComponent>().unwrap();
 
-        let tag = format!("{mod_id}:{}", TestOneHandlesComponent::NAME);
+        let tag = format!("{mod_id}:{}", TestStatefulComponent::NAME);
         let value: ron::Value = ron::from_str("(attr2: a)").unwrap();
 
         let err = reg.deserialize_component(tag, value).unwrap_err();
@@ -188,7 +188,7 @@ use super::*;
         let reg = ModRegistry::new();
         let mod_id = "mod_id";
 
-        let tag = format!("{mod_id}:{}", TestOneHandlesComponent::NAME);
+        let tag = format!("{mod_id}:{}", TestStatefulComponent::NAME);
 
         let value: ron::Value = ron::from_str("(attr2: 2)").unwrap();
 

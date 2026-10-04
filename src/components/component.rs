@@ -1,4 +1,4 @@
-use std::{any::{Any, TypeId}, fmt::Debug};
+use std::{any::{Any}, fmt::Debug};
 
 use derive_more::{Add, Eq, PartialEq, Sub};
 
@@ -45,12 +45,6 @@ pub trait HandlesMut<T: MutEvent>: Component {
 }
 
 pub trait Component: Any + DynamicHandlers + Debug + erased_serde::Serialize {
-    fn get_wanted_events(&self) -> Vec<TypeId> {
-        self.get_handlers().iter()
-            .map(|t| t.0)
-            .collect()
-    }
-
     fn get_priority(&self) -> Priority {
         Priority::DEFAULT
     }
@@ -62,9 +56,6 @@ erased_serde::serialize_trait_object!(Component);
 
 #[cfg(test)]
 mod tests {
-
-    use crate::components::test_util::{TestGetAttributesEvent, TestOneHandlesComponent, TestZeroHandlesComponent};
-
     use super::*;
 
     #[test]
@@ -75,18 +66,5 @@ mod tests {
         for i in 0..major_priorities.len()-1 {
             assert!(major_priorities[i].clone() + biggest_nudge < major_priorities[i+1] - biggest_nudge);
         }
-    }
-
-    #[test]
-    fn no_wanted_events() {
-        let component = TestZeroHandlesComponent {};
-        assert!(component.get_wanted_events().is_empty())
-    }
-
-    #[test]
-    fn one_wanted_events() {
-        let component = TestOneHandlesComponent::default();
-        assert!(component.get_wanted_events().contains(&TypeId::of::<TestGetAttributesEvent>()));
-        assert_eq!(component.get_wanted_events().len(), 1);
     }
 }

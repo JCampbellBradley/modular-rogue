@@ -130,7 +130,7 @@ pub fn mods_dir() -> PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use crate::{components::test_util::TestZeroHandlesComponent, mod_registry::{load_mods::{LoadedMod, process_mods}, registry::ModRegistry, test_util::{CIRCULAR_MANIFEST1, CIRCULAR_MANIFEST2, DUPLICATE_MANIFEST, RESERVED_MANIFEST, TEST_MANIFEST1, TEST_MANIFEST2, register_duplicate_tag, register_duplicate_type, register_noop, register_panic, register_test}}};
+    use crate::{components::test_util::TestStatelessComponent, mod_registry::{load_mods::{LoadedMod, process_mods}, registry::ModRegistry, test_util::{CIRCULAR_MANIFEST1, CIRCULAR_MANIFEST2, DUPLICATE_MANIFEST, RESERVED_MANIFEST, TEST_MANIFEST1, TEST_MANIFEST2, register_duplicate_tag, register_duplicate_type, register_noop, register_panic, register_test}}};
     use crate::mod_registry::mod_element::ModElement;
 
     #[test]
@@ -146,7 +146,7 @@ mod tests {
         let mod_registry = process_mods(mods, mod_registry).unwrap();
 
         let tags: Vec<_> = mod_registry.get_tags().cloned().collect();
-        let tag = format!("{}:{}", TEST_MANIFEST1.mod_id, TestZeroHandlesComponent::NAME);
+        let tag = format!("{}:{}", TEST_MANIFEST1.mod_id, TestStatelessComponent::NAME);
 
         assert!(tags.contains(&tag));
     }
@@ -169,7 +169,7 @@ mod tests {
         let mod_registry = process_mods(mods, mod_registry).unwrap();
 
         let tags: Vec<_> = mod_registry.get_tags().cloned().collect();
-        let tag = format!("{}:{}", TEST_MANIFEST2.mod_id, TestZeroHandlesComponent::NAME);
+        let tag = format!("{}:{}", TEST_MANIFEST2.mod_id, TestStatelessComponent::NAME);
 
         assert!(tags.contains(&tag));
     }

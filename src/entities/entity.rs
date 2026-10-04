@@ -82,87 +82,87 @@ impl Default for Entity {
 #[cfg(test)]
 mod tests {
 
-    use crate::components::test_util::{TestGetAttributesEvent, TestOneHandlesComponent, TestSetAttributesEvent, TestZeroHandlesComponent};
+    use crate::components::test_util::{TestGetAttributesEvent, TestStatefulComponent, TestSetAttributesEvent, TestStatelessComponent};
 
 use super::*;
 
     #[test]
     fn generate() {
         let mut ent = Entity::new();
-        ent.generate::<TestOneHandlesComponent>().unwrap();
-        ent.generate::<TestZeroHandlesComponent>().unwrap();
+        ent.generate::<TestStatefulComponent>().unwrap();
+        ent.generate::<TestStatelessComponent>().unwrap();
 
         assert_eq!(ent.num_components(), 2);
-        assert!(ent.has_component(TypeId::of::<TestOneHandlesComponent>()));
-        assert!(ent.has_component(TypeId::of::<TestZeroHandlesComponent>()));
+        assert!(ent.has_component(TypeId::of::<TestStatefulComponent>()));
+        assert!(ent.has_component(TypeId::of::<TestStatelessComponent>()));
     }
 
     #[test]
     fn generate_and_use() {
         let mut ent = Entity::new();
-        let comp = ent.generate::<TestOneHandlesComponent>().unwrap();
+        let comp = ent.generate::<TestStatefulComponent>().unwrap();
 
-        assert!((*comp).type_id() == TypeId::of::<TestOneHandlesComponent>())
+        assert!((*comp).type_id() == TypeId::of::<TestStatefulComponent>())
     }
 
     #[test]
     fn generate_double() {
         let mut ent = Entity::new();
-        ent.generate::<TestOneHandlesComponent>().unwrap();
-        let err = ent.generate::<TestOneHandlesComponent>();
+        ent.generate::<TestStatefulComponent>().unwrap();
+        let err = ent.generate::<TestStatefulComponent>();
 
         assert!(err.is_err());
 
         assert_eq!(ent.num_components(), 1);
-        assert!(ent.has_component(TypeId::of::<TestOneHandlesComponent>()));
+        assert!(ent.has_component(TypeId::of::<TestStatefulComponent>()));
     }
     
     #[test]
     fn attach() {
         let mut ent = Entity::new();
-        ent.attach(Box::new(TestOneHandlesComponent::default())).unwrap();
-        ent.attach(Box::new(TestZeroHandlesComponent::default())).unwrap();
+        ent.attach(Box::new(TestStatefulComponent::default())).unwrap();
+        ent.attach(Box::new(TestStatelessComponent::default())).unwrap();
 
         assert_eq!(ent.num_components(), 2);
-        assert!(ent.has_component(TypeId::of::<TestOneHandlesComponent>()));
-        assert!(ent.has_component(TypeId::of::<TestZeroHandlesComponent>()));
+        assert!(ent.has_component(TypeId::of::<TestStatefulComponent>()));
+        assert!(ent.has_component(TypeId::of::<TestStatelessComponent>()));
     }
     
     #[test]
     fn attach_and_use() {
         let mut ent = Entity::new();
-        let comp = ent.attach(Box::new(TestOneHandlesComponent::default())).unwrap();
+        let comp = ent.attach(Box::new(TestStatefulComponent::default())).unwrap();
        
-        assert!((*comp).type_id() == TypeId::of::<TestOneHandlesComponent>())
+        assert!((*comp).type_id() == TypeId::of::<TestStatefulComponent>())
     }
 
     #[test]
     fn attach_double() {
         let mut ent = Entity::new();
-        ent.attach(Box::new(TestOneHandlesComponent::default())).unwrap();
-        let err = ent.attach(Box::new(TestOneHandlesComponent::default()));
+        ent.attach(Box::new(TestStatefulComponent::default())).unwrap();
+        let err = ent.attach(Box::new(TestStatefulComponent::default()));
 
         assert!(err.is_err());
 
         assert_eq!(ent.num_components(), 1);
-        assert!(ent.has_component(TypeId::of::<TestOneHandlesComponent>()));
+        assert!(ent.has_component(TypeId::of::<TestStatefulComponent>()));
     }
     
     #[test]
     fn require() {
         let mut ent = Entity::new();
-        ent.require::<TestZeroHandlesComponent>();
-        ent.require::<TestOneHandlesComponent>();
+        ent.require::<TestStatelessComponent>();
+        ent.require::<TestStatefulComponent>();
 
         assert_eq!(ent.num_components(), 2);
-        assert!(ent.has_component(TypeId::of::<TestOneHandlesComponent>()));
-        assert!(ent.has_component(TypeId::of::<TestZeroHandlesComponent>()));
+        assert!(ent.has_component(TypeId::of::<TestStatefulComponent>()));
+        assert!(ent.has_component(TypeId::of::<TestStatelessComponent>()));
     }
     
     #[test]
     fn require_and_use() {
         let mut ent = Entity::new();
-        let comp = ent.require::<TestOneHandlesComponent>();
+        let comp = ent.require::<TestStatefulComponent>();
 
         assert_eq!(comp.attr1, 0);
     }
@@ -170,20 +170,20 @@ use super::*;
     #[test]
     fn require_double() {
         let mut ent = Entity::new();
-        ent.require::<TestZeroHandlesComponent>();
-        ent.require::<TestZeroHandlesComponent>();
+        ent.require::<TestStatelessComponent>();
+        ent.require::<TestStatelessComponent>();
 
         assert_eq!(ent.num_components(), 1);
-        assert!(ent.has_component(TypeId::of::<TestZeroHandlesComponent>()));
+        assert!(ent.has_component(TypeId::of::<TestStatelessComponent>()));
     }
 
     #[test]
     fn get() {
         let mut ent = Entity::new();
-        ent.attach(Box::new(TestOneHandlesComponent {attr1: 1, attr2: 2})).unwrap();
-        ent.attach(Box::new(TestZeroHandlesComponent {})).unwrap();
+        ent.attach(Box::new(TestStatefulComponent {attr1: 1, attr2: 2})).unwrap();
+        ent.attach(Box::new(TestStatelessComponent {})).unwrap();
 
-        let comp = ent.get_component::<TestOneHandlesComponent>().unwrap();
+        let comp = ent.get_component::<TestStatefulComponent>().unwrap();
 
         assert!(comp.attr2 == 2);
     }
@@ -191,7 +191,7 @@ use super::*;
     #[test]
     fn dispatch() {
         let mut ent = Entity::new();
-        ent.attach(Box::new(TestOneHandlesComponent {attr1: 1, attr2: 2})).unwrap();
+        ent.attach(Box::new(TestStatefulComponent {attr1: 1, attr2: 2})).unwrap();
 
         let mut getter = TestGetAttributesEvent::default();
 
@@ -203,7 +203,7 @@ use super::*;
     #[test]
     fn dispatch_mut() {
         let mut ent = Entity::new();
-        ent.attach(Box::new(TestOneHandlesComponent {attr1: 0, attr2: 0})).unwrap();
+        ent.attach(Box::new(TestStatefulComponent {attr1: 0, attr2: 0})).unwrap();
 
         let mut setter = TestSetAttributesEvent {attr1: 3, attr2:0};
 
@@ -215,15 +215,15 @@ use super::*;
     #[test]
     fn components(){
         let mut ent = Entity::new();
-        ent.require::<TestZeroHandlesComponent>();
-        ent.require::<TestOneHandlesComponent>();
+        ent.require::<TestStatelessComponent>();
+        ent.require::<TestStatefulComponent>();
 
         let ids: Vec<_> = ent.components()
             .map(|comp| comp.type_id())
             .collect();
 
         assert_eq!(ids.len(), 2);
-        assert!(ids.contains(&TypeId::of::<TestZeroHandlesComponent>()));
-        assert!(ids.contains(&TypeId::of::<TestOneHandlesComponent>()));
+        assert!(ids.contains(&TypeId::of::<TestStatelessComponent>()));
+        assert!(ids.contains(&TypeId::of::<TestStatefulComponent>()));
     }
 }
