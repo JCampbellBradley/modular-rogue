@@ -48,6 +48,10 @@ pub trait Component: Any + DynamicHandlers + Debug + erased_serde::Serialize {
     fn get_priority(&self) -> Priority {
         Priority::DEFAULT
     }
+    
+    fn type_name(&self) -> &'static str {
+        std::any::type_name::<Self>()
+    }
 }
 
 erased_serde::serialize_trait_object!(Component);

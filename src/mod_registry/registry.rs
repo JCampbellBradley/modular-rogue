@@ -24,10 +24,10 @@ impl ModRegistry {
 
     pub fn register_component(&mut self, tag: String, component_entry: ComponentEntry) -> Result<(), RegistryError> {
         if let Some(tag_first) = self.tags.remove(&component_entry.type_id) {
-            return Err(RegistryError::DuplicateComponentType { id: component_entry.type_id, tag_first, tag_second: tag })
+            return Err(RegistryError::DuplicateComponentType { type_name: component_entry.type_name, tag_first, tag_second: tag })
         }
         if let Some(entry_first) = self.components.remove(&tag) {
-            return Err(RegistryError::DuplicateComponentTag { tag, entry_first, entry_second: component_entry })
+            return Err(RegistryError::DuplicateComponentTag { tag, entry_first: Box::new(entry_first), entry_second: Box::new(component_entry) })
         }
 
         self.tags.insert(component_entry.type_id, tag.clone());
@@ -42,7 +42,7 @@ impl ModRegistry {
         if let Some(tag) = self.tags.get(&id) {
             Ok((tag.clone(), RawValue::from_rust(&Box::new(comp))?))
         } else {
-            Err(RegistryError::SerializedUnknownType { id })
+            Err(RegistryError::SerializedUnknownType { type_name: comp.type_name().to_string() })
         }
     }
 
@@ -71,6 +71,7 @@ impl ModContext<'_> {
 
         let component_entry = ComponentEntry {
             owner: self.mod_id.to_string(),
+            type_name: std::any::type_name::<T>().to_string(),
             type_id: TypeId::of::<T>(),
             deserialize_fn: deserialize_as::<T>,
         };
@@ -84,6 +85,7 @@ impl ModContext<'_> {
 #[derive(Debug)]
 pub struct ComponentEntry {
     pub owner: String,
+    pub type_name: String,
     pub type_id: TypeId,
     pub deserialize_fn: DeserializeFn
 }

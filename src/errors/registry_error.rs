@@ -1,5 +1,3 @@
-use std::any::TypeId;
-
 use thiserror::Error;
 
 use crate::mod_registry::registry::ComponentEntry;
@@ -9,18 +7,18 @@ pub enum RegistryError {
     #[error("The tag `{tag}` was used to register two distinct components: {entry_first:?} and {entry_second:?}")]
     DuplicateComponentTag {
         tag: String,
-        entry_first: ComponentEntry,
-        entry_second: ComponentEntry
+        entry_first: Box<ComponentEntry>,
+        entry_second: Box<ComponentEntry>
     },
-    #[error("The component with type {id:?} was registered twice, with tags: {tag_first:?} and {tag_second:?}")]
+    #[error("The component with type {type_name:?} was registered twice, with tags: {tag_first:?} and {tag_second:?}")]
     DuplicateComponentType {
-        id: TypeId,
+        type_name: String,
         tag_first: String,
         tag_second: String
     },
-    #[error("Tried to serialize using unknown type `{id:?}`")]
+    #[error("Tried to serialize using unknown type {type_name:?}")]
     SerializedUnknownType {
-        id: TypeId
+        type_name: String
     },
     #[error("Tried to deserialize using unknown tag `{tag:?}`")]
     DeserializedUnknownTag {
