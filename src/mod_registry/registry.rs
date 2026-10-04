@@ -184,6 +184,17 @@ use super::*;
     }
 
     #[test]
+    fn serialize_unknown() {
+        let reg = ModRegistry::new();
+
+        let comp = TestStatelessComponent::default();
+
+        let err = reg.serialize_component(&comp).unwrap_err();
+
+        println!("{err}");
+    }
+
+    #[test]
     fn unknown_tag() {
         let reg = ModRegistry::new();
         let mod_id = "mod_id";
