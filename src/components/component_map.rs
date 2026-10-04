@@ -50,9 +50,7 @@ impl ComponentMap {
 
     fn push_and_sort<T>(handlers: &mut Vec<(Priority, TypeId, T)>, item: (Priority, TypeId, T)) {
         handlers.push(item);
-        handlers.sort_by(|a, b|
-            b.0.cmp(&a.0)
-        );
+        handlers.sort_by_key(|(priority, _, _)| std::cmp::Reverse(*priority));
     }
 
     pub fn contains_key(&self, t: TypeId) -> bool {
@@ -62,15 +60,13 @@ impl ComponentMap {
     pub fn get<T: Component>(&self) -> Option<&T> {
         self.components.get(&TypeId::of::<T>())
             .map(|comp| comp.as_ref())
-            .map(|comp| (comp as &dyn Any).downcast_ref::<T>())
-            .flatten()
+            .and_then(|comp| (comp as &dyn Any).downcast_ref::<T>())
     }
 
     pub fn get_mut<T: Component>(&mut self) -> Option<&mut T> {
         self.components.get_mut(&TypeId::of::<T>())
             .map(|comp| comp.as_mut())
-            .map(|comp| (comp as &mut dyn Any).downcast_mut::<T>())
-            .flatten()
+            .and_then(|comp| (comp as &mut dyn Any).downcast_mut::<T>())
     }
 
     pub fn dispatch<T : ConstEvent + 'static>(&self, e: &mut T ) {
