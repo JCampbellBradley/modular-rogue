@@ -39,4 +39,15 @@ mod tests {
         assert_eq!(comp.attr2, 3);
         assert_eq!(comp.attr1, 0);
     }
+
+    #[test]
+    fn bake_bad_tag() {
+        let reg = reg_with_test_components();
+
+        let ron_bp = r#"EntityBlueprint(components: {"test:bad_tag": (attr2:3)})"#;
+        let blueprint: EntityBlueprint = ron::from_str(ron_bp).unwrap();
+        let err = blueprint.bake(&reg).unwrap_err();
+
+        println!("{err}");
+    }
 }
