@@ -6,6 +6,7 @@ resolver = "2"
 
 [dependencies]
 serde = {version = "1.0.229", features = ["derive"] } 
+erased-serde = "0.4.10"
 modular-rogue-macros = {path = "./modular-rogue-macros"}
 derive_more = { version = "2.1.1", features = ["add", "eq"] }
 ron = "0.12.2"
@@ -13,7 +14,6 @@ subenum = "1.2.0"
 thiserror = "2.0.21"
 libloading = "0.9.0"
 linkme = "0.3.37"
-erased-serde = "0.4.10"
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(coverage,coverage_nightly)'] }
@@ -24,6 +24,8 @@ crate-type = ["dylib"]
 [[bin]]
 name = "modular-rogue-game"
 path = "src/main.rs"
+test = false
 
 [workspace]
-members = ["modular-rogue-macros", "xtask"]
+members = ["modular-rogue-macros", "sample-mod", "xtask", "tests/mod_fixtures/blank-mod", "tests/mod_fixtures/minimal-mod"]
+default-members = [".", "modular-rogue-macros", "sample-mod", "xtask"]

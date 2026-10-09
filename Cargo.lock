@@ -12,6 +12,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "blank-mod"
+version = "0.1.0"
+dependencies = [
+ "modular-rogue",
+]
+
+[[package]]
 name = "cfg-if"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -114,6 +121,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
+name = "minimal-mod"
+version = "0.1.0"
+dependencies = [
+ "modular-rogue",
+]
+
+[[package]]
 name = "modular-rogue"
 version = "0.1.0"
 dependencies = [
@@ -193,6 +207,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cfcb3a22ef46e85b45de6ee7e79d063319ebb6594faafcf1c225ea92ab6e9b92"
 dependencies = [
  "semver",
+]
+
+[[package]]
+name = "sample-mod"
+version = "0.1.0"
+dependencies = [
+ "modular-rogue",
 ]
 
 [[package]]

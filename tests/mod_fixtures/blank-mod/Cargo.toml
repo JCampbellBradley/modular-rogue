@@ -1,0 +1,12 @@
+[package]
+name = "blank-mod"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+modular-rogue = {path = "../../../"}
+
+[lib]
+crate-type = ["dylib"]
+path = "src/lib.rs"
+name = "blank_mod"

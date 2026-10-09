@@ -1,6 +1,20 @@
-use std::{env::consts::{DLL_PREFIX, DLL_SUFFIX}, fs, path::{Path, PathBuf}, process::Command};
+use std::{env::consts::{DLL_PREFIX, DLL_SUFFIX}, fs, path::{Path, PathBuf}, process::{Command, ExitCode}};
 
-fn main() {
+fn main() -> ExitCode {
+    let args: Vec<String> = std::env::args().skip(1).collect();
+
+    match args.first().map(String::as_str) {
+        Some("dist") => dist(),
+        Some("test-mods") => test_mods(),
+        _ => {
+            eprintln!("usage: cargo xtask <dist|test-mods>");
+            return ExitCode::FAILURE;
+        }
+    }
+    ExitCode::SUCCESS
+}
+
+fn dist() {
     let status = Command::new(env!("CARGO"))
         .args(["build", "--release", "--workspace"])
         .status()
@@ -8,7 +22,7 @@ fn main() {
     assert!(status.success());
 
 
-    assemble_dist(&[]);
+    assemble_dist(&["sample_mod"]);
 }
 
 fn assemble_dist(mods: &[&str]) {
@@ -20,7 +34,7 @@ fn assemble_dist(mods: &[&str]) {
     let release = root_dir.join(Path::new("target/release"));
     let dist = root_dir.join(Path::new("dist"));
     let _ = fs::remove_dir_all(&dist);
-    fs::create_dir_all(&dist.join("mods")).unwrap();
+    fs::create_dir_all(dist.join("mods")).unwrap();
 
     let exe = format!("modular-rogue-game{}", std::env::consts::EXE_SUFFIX);
     let engine = format!("{DLL_PREFIX}modular_rogue{DLL_SUFFIX}");
@@ -65,4 +79,17 @@ fn find_libstd() -> PathBuf {
 
     assert_eq!(found.len(), 1, "expected exactly one std library, found {found:?}");
     found.pop().unwrap()
+}
+
+fn test_mods() {
+    cargo(&["build", "-p", "blank-mod", "-p", "minimal-mod"]);
+    cargo(&["test", "--test", "test_mods", "--", "--ignored"]);
+}
+
+fn cargo(args: &[&str]) {
+    let status = Command::new(env!("CARGO"))
+        .args(args)
+        .status()
+        .expect("failed to run cargo");
+    assert!(status.success(), "cargo {} failed", args.join(" "));
 }

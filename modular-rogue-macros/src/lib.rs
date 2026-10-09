@@ -106,7 +106,8 @@ pub fn mod_component_macro(item: TokenStream) -> TokenStream {
     let mr_name_ident = syn::Ident::new(&mr_name, ident.span());
 
     quote! {
-        #[linkme::distributed_slice(crate::MR_COMPONENTS)]
+        #[#path::linkme::distributed_slice(crate::MR_COMPONENTS)]
+        #[linkme(crate = #path::linkme)]
         static #mr_name_ident: #path::mod_registry::load_mods::RegisterFn = |ctx| ctx.register_component::<#ident>();
 
         #[automatically_derived]

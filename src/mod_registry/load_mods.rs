@@ -1,4 +1,4 @@
-use std::{collections::HashSet, env::consts::DLL_SUFFIX, ffi::CStr, fs::{self, ReadDir}, os::raw::c_char, panic::AssertUnwindSafe, path::{Path, PathBuf}};
+use std::{collections::HashSet, env::consts::DLL_SUFFIX, ffi::CStr, fs::{self, ReadDir}, os::raw::c_char, panic::AssertUnwindSafe, path::{Path}};
 
 use libloading::Library;
 
@@ -118,14 +118,6 @@ fn topological_sort(mut pending: Vec<LoadedMod>) -> Result<Vec<LoadedMod>, ModEr
     }
 
     Ok(sorted)
-}
-
-pub fn mods_dir() -> PathBuf {
-    std::env::current_exe()
-        .expect("couldn't locate the running executable")
-        .parent()
-        .expect("executable has no parent directory")
-        .join("mods")
 }
 
 #[cfg(test)]
