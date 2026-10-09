@@ -1,5 +1,5 @@
 use std::{env::consts::{DLL_PREFIX, DLL_SUFFIX}, fs, path::PathBuf};
-use modular_rogue::mod_registry::{load_mods::load_mods, registry::ModRegistry};
+use modular_rogue::{integration::mod_collection::collect_mods, mod_registry::{load_mods::load_mods, registry::ModRegistry}};
 
 fn build_dir() -> PathBuf {
     std::env::current_exe().unwrap()
@@ -21,19 +21,18 @@ fn stage_mods(test_name: &str, mods: &[&str]) -> PathBuf {
     }
     dir
 }
-
 #[test]
 #[ignore = "needs fixture mods built; run via `cargo xtask test-mods`"]
 fn basic_mod() {
     let dir = stage_mods("loads_blank_mod", &["blank_mod"]);
-    let _registry = load_mods(&dir, ModRegistry::new()).unwrap();
+    let _registry = load_mods(&dir, ModRegistry::new(), collect_mods).unwrap();
 }
 
 #[test]
 #[ignore = "needs fixture mods built; run via `cargo xtask test-mods`"]
 fn minimal_mod() {
     let dir = stage_mods("loads_minimal_mod", &["minimal_mod"]);
-    let registry = load_mods(&dir, ModRegistry::new()).unwrap();
+    let registry = load_mods(&dir, ModRegistry::new(), collect_mods).unwrap();
 
     assert!(registry.get_tags().any(|tag| tag == "minimal_mod:test_component"))
 }

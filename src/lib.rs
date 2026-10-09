@@ -9,6 +9,11 @@ pub mod errors;
 pub mod blueprints;
 pub mod mod_registry;
 
+/// Utility code that allows integration with e.g. mods.
+/// Only covered by integration tests, not unit tests.
+/// Contains a lot of unsafe operations.
+pub mod integration;
+
 
 pub use mod_registry::core_mod::MR_COMPONENTS;
 

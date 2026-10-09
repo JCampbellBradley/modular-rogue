@@ -31,5 +31,9 @@ pub enum ModError {
     #[error("A mod was registered with the reserved ID: {id}")]
     ReservedModID {
         id: String
-    }
+    },
+    #[error("Caught an IO error while trying to load mods.\n {0}")]
+    IOError (#[from] std::io::Error),
+    #[error("Caught an libloading error while trying to load mods.\n {0}")]
+    LibloadingError (#[from] libloading::Error)
 }

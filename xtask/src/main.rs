@@ -22,7 +22,7 @@ fn dist() {
     assert!(status.success());
 
 
-    assemble_dist(&["sample_mod"]);
+    assemble_dist(&[]);
 }
 
 fn assemble_dist(mods: &[&str]) {

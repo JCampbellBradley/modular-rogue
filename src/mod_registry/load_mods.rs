@@ -1,56 +1,27 @@
-use std::{collections::HashSet, env::consts::DLL_SUFFIX, ffi::CStr, fs::{self, ReadDir}, os::raw::c_char, panic::AssertUnwindSafe, path::{Path}};
+use std::{collections::HashSet, fs::{self, ReadDir}, panic::AssertUnwindSafe, path::{Path}};
 
-use libloading::Library;
+use crate::{errors::{mod_error::ModError, registry_error::RegistryError}, mod_registry::{core_mod::CORE_MOD_ID, registry::{ModContext, ModManifest, ModRegistry}}};
 
-use crate::{errors::{mod_error::ModError, registry_error::RegistryError}, mod_registry::{core_mod::CORE_MOD_ID, engine::ENGINE_BUILD_ID, registry::{ModContext, ModManifest, ModRegistry}}};
-
-struct LoadedMod {
+pub struct LoadedMod {
     pub manifest: ModManifest,
     pub register: RegisterFn,
 }
 
 pub type RegisterFn = fn(&mut ModContext<'_>) -> Result<(), RegistryError>;
+pub type ModCollector = fn(&mut Vec<LoadedMod>, ReadDir) -> Result<(), ModError>;
 
-pub fn load_mods(dir: &Path, mod_registry: ModRegistry) -> Result<ModRegistry, ModError> {
+pub fn load_mods(dir: &Path, mod_registry: ModRegistry, mod_collector: ModCollector) -> Result<ModRegistry, ModError> {
     let mut mods = Vec::<LoadedMod>::new();
-    read_mods(&mut mods, dir)?;
+    read_mods(&mut mods, dir, mod_collector)?;
     process_mods(mods, mod_registry)
 }
 
-fn read_mods(mods: &mut Vec<LoadedMod>, dir: &Path) -> Result<(), ModError> {
+fn read_mods(mods: &mut Vec<LoadedMod>, dir: &Path, mod_collector: ModCollector) -> Result<(), ModError> {
     if let Ok(dir_entries)  = fs::read_dir(dir) {
-        collect_mods(mods, dir_entries)
+        (mod_collector)(mods, dir_entries)
     } else {
         Ok(())
     }
-}
-
-fn collect_mods(mods: &mut Vec<LoadedMod>, dir_entries: ReadDir) -> Result<(), ModError> {
-    for entry in dir_entries {
-        let path = entry.unwrap().path();
-        if !path.to_string_lossy().ends_with(DLL_SUFFIX) { continue; }
-        let lib: &'static Library = Box::leak(Box::new(unsafe { Library::new(&path).unwrap() }));
-        
-        let build_id: libloading::Symbol<unsafe extern "C" fn() -> *const c_char> =
-            unsafe { lib.get(b"mr_build_id").unwrap() };
-        let theirs = unsafe { CStr::from_ptr(build_id()) };
-        if theirs != ENGINE_BUILD_ID {
-            return Err(ModError::BuildMismatch { path, 
-                expected: ENGINE_BUILD_ID.to_string_lossy().into(), found: theirs.to_string_lossy().into() });
-        }
-
-        let manifest_fn: libloading::Symbol<fn() -> ModManifest> =
-            unsafe { lib.get(b"mr_manifest").unwrap() };
-        let register_fn: libloading::Symbol<RegisterFn> =
-            unsafe { lib.get(b"mr_register").unwrap() };
-
-        mods.push(LoadedMod {
-            manifest: manifest_fn(),
-            register: *register_fn,
-        });
-    }
-
-    Ok(())
 }
 
 fn process_mods(mods: Vec<LoadedMod>, mut mod_registry: ModRegistry) -> Result<ModRegistry, ModError> {
@@ -122,7 +93,9 @@ fn topological_sort(mut pending: Vec<LoadedMod>) -> Result<Vec<LoadedMod>, ModEr
 
 #[cfg(test)]
 mod tests {
-    use crate::{components::test_util::TestStatelessComponent, mod_registry::{load_mods::{LoadedMod, process_mods}, registry::ModRegistry, test_util::{CIRCULAR_MANIFEST1, CIRCULAR_MANIFEST2, DUPLICATE_MANIFEST, RESERVED_MANIFEST, TEST_MANIFEST1, TEST_MANIFEST2, register_duplicate_tag, register_duplicate_type, register_noop, register_panic, register_test}}};
+    use std::{env::temp_dir, fs::ReadDir, path::PathBuf};
+
+use crate::{components::test_util::TestStatelessComponent, errors::mod_error::ModError, mod_registry::{load_mods::{LoadedMod, load_mods, process_mods}, registry::ModRegistry, test_util::{CIRCULAR_MANIFEST1, CIRCULAR_MANIFEST2, DUPLICATE_MANIFEST, RESERVED_MANIFEST, TEST_MANIFEST1, TEST_MANIFEST2, register_duplicate_tag, register_duplicate_type, register_noop, register_panic, register_test}}};
     use crate::mod_registry::mod_element::ModElement;
 
     #[test]
@@ -277,5 +250,25 @@ mod tests {
         let err = process_mods(mods, mod_registry).unwrap_err();
 
         println!("{err}")
+    }
+
+    fn dont_collect_mods(_mods: &mut Vec<LoadedMod>, _dir: ReadDir) -> Result<(), ModError> {
+        Ok(())
+    }
+
+    // Only empty/missing mod dirs can be tested here. Actual mods fall into the purview of
+    // an integration test.
+    #[test]
+    fn empty_mod_dir() {
+        let buf = temp_dir();
+        let res = load_mods(&buf, ModRegistry::new(), dont_collect_mods);
+        assert!(res.is_ok());
+    }
+
+    #[test]
+    fn no_mod_dir() {
+        let buf = PathBuf::new();
+        let res = load_mods(&buf, ModRegistry::new(), dont_collect_mods);
+        assert!(res.is_ok());
     }
 }

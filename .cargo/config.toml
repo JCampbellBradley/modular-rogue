@@ -2,6 +2,6 @@
 rustflags = ["-C", "prefer-dynamic"]
 
 [alias]
-lcov = "llvm-cov --lcov --output-path lcov.info --ignore-filename-regex (test_util|src/errors/.*)\\.rs$"
-cov = "llvm-cov --ignore-filename-regex (test_util|src/errors/.*)\\.rs$"
+lcov = "llvm-cov --lcov --output-path lcov.info --ignore-filename-regex (test_util|src/errors/.*|src/integration/.*|main)\\.rs$"
+cov = "llvm-cov --ignore-filename-regex (test_util|src/errors/.*|src/integration/.*|main)\\.rs$"
 xtask = "run --package xtask --"
