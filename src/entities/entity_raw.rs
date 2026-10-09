@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{entities::entity::Entity, errors::bake_error::BakeError, mod_registry::{bake::{Bake, Unbake}, registry::ModRegistry}, worlds::{position::Position, registry::{Registerable, RegistryID}}};
+use crate::{entities::entity::Entity, errors::{bake_error::BakeError, expect_messages::LOGICALLY_UNREACHABLE}, mod_registry::{bake::{Bake, Unbake}, registry::ModRegistry}, worlds::{position::Position, registry::{Registerable, RegistryID}}};
 
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct EntityRaw {
@@ -19,7 +19,7 @@ impl Bake<Entity> for EntityRaw {
 
         for (tag, text) in self.components {
             let component = mod_registry.deserialize_component(tag, text.as_ref())?;
-            ent.attach(component)?;
+            ent.attach(component).expect(LOGICALLY_UNREACHABLE);
         }
 
         Ok(ent)
@@ -46,7 +46,9 @@ impl Unbake<Entity> for EntityRaw {
 
 #[cfg(test)]
 mod tests {
-    use crate::{components::test_util::{TestStatefulComponent, TestStatelessComponent}, mod_registry::test_util::reg_with_test_components};
+    use ron::from_str;
+
+use crate::{components::test_util::{TestStatefulComponent, TestStatelessComponent}, mod_registry::test_util::reg_with_test_components, worlds::registry::Registry};
 
 use super::*;
 
@@ -67,5 +69,54 @@ use super::*;
         let baked = raw.bake(&reg).unwrap();
 
         assert_eq!(baked.get_component::<TestStatefulComponent>().unwrap().attr1, 1)
+    }
+
+    #[test]
+    fn unbake_id() {
+        let reg = reg_with_test_components();
+
+        let mut ent_reg: Registry<Entity> = Registry::new();
+
+
+        let mut ent = Entity::new();
+        ent.require::<TestStatelessComponent>();
+        let a = ent.require::<TestStatefulComponent>();
+        a.attr1 = 1;
+
+        let id = ent_reg.register(ent);
+
+
+        let raw = EntityRaw::unbake(ent_reg.get(id).unwrap(), &reg).unwrap();
+
+        println!("{raw:?}");
+
+        let baked = raw.bake(&reg).unwrap();
+
+        let orig = ent_reg.get(baked.get_id().unwrap()).unwrap();
+
+        assert_eq!(orig.get_component::<TestStatefulComponent>().unwrap().attr1, 1)
+    }
+
+    #[test]
+    fn bad_deserialize() {
+        let reg = reg_with_test_components();
+
+        let raw: EntityRaw = from_str(r#"EntityRaw(components: [("bad_tag", ())])"#).unwrap();
+
+        let err = raw.bake(&reg).unwrap_err();
+
+        println!("{err}")
+    }
+
+    #[test]
+    fn bad_serialize() {
+        let reg = ModRegistry::new();
+
+        let mut ent = Entity::new();
+        ent.require::<TestStatelessComponent>();
+
+        let err = EntityRaw::unbake(&ent, &reg).unwrap_err();
+
+        println!("{err}")
     }
 }

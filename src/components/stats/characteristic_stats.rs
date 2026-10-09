@@ -133,4 +133,24 @@ mod tests {
 
         assert!(collect.get(Characteristic::Intelligence).is_none())
     }
+
+    #[test]
+    fn change_cap() {
+        let mut stats = CharacteristicStats::new();
+
+        
+        let mut change = StatChangeEvent::new()
+            .change_cap(Characteristic::Intelligence, 13);
+
+        stats.handle_mut(&mut change);
+
+        let mut collect = StatCollectEvent::new()
+                .want(Characteristic::Intelligence);
+
+        stats.handle(&mut collect);
+
+        let intelligence = collect.get(Characteristic::Intelligence).unwrap();
+
+        assert_eq!(intelligence.base, 0);
+    }
 }

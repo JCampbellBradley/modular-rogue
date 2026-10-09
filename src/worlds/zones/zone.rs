@@ -83,6 +83,15 @@ mod tests {
     }
 
     #[test]
+    fn get_entity_oob() {
+        let mut zone = Zone::new(3, 3);
+        let id = 1;
+
+        let err = zone.put_entity((4, 4).into(), id).unwrap_err();
+        println!("{err}")
+    }
+
+    #[test]
     fn remove_entity() {
         let mut zone = Zone::new(3, 3);
         let id = 1;
@@ -93,5 +102,14 @@ mod tests {
         let ids: Vec<_> = zone.get_entities((1, 1).into()).unwrap().collect();
 
         assert_eq!(ids.len(), 0);
+    }
+
+    #[test]
+    fn remove_entity_oob() {
+        let mut zone = Zone::new(3, 3);
+        let id = 1;
+
+        let err = zone.remove_entity((4, 4).into(), id).unwrap_err();
+        println!("{err}")
     }
 }

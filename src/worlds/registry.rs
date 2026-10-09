@@ -9,6 +9,12 @@ pub struct Registry<T: Registerable> {
     last_id: RegistryID
 }
 
+impl<T: Registerable + Default> Registry<T> {
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
 impl<T: Registerable> Registry<T> {
     pub fn register(&mut self, mut item: T) -> RegistryID {
         self.last_id += 1;

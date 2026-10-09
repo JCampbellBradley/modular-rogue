@@ -256,6 +256,10 @@ use crate::{components::test_util::TestStatelessComponent, errors::mod_error::Mo
         Ok(())
     }
 
+    fn error_collect_mods(_mods: &mut Vec<LoadedMod>, _dir: ReadDir) -> Result<(), ModError> {
+        Err(ModError::Panicked { id: "blah".to_string() })
+    }
+
     // Only empty/missing mod dirs can be tested here. Actual mods fall into the purview of
     // an integration test.
     #[test]
@@ -268,7 +272,12 @@ use crate::{components::test_util::TestStatelessComponent, errors::mod_error::Mo
     #[test]
     fn no_mod_dir() {
         let buf = PathBuf::new();
-        let res = load_mods(&buf, ModRegistry::new(), dont_collect_mods);
-        assert!(res.is_ok());
+        load_mods(&buf, ModRegistry::new(), dont_collect_mods).unwrap();
+    }
+
+    #[test]
+    fn mod_collector_error() {
+        let buf = temp_dir();
+        load_mods(&buf, ModRegistry::new(), error_collect_mods).unwrap_err();
     }
 }

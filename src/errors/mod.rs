@@ -4,3 +4,4 @@ pub mod bake_error;
 pub mod mod_error;
 pub mod registry_error;
 pub mod entity_error;
+pub mod expect_messages;

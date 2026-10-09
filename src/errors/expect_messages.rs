@@ -1,0 +1,2 @@
+pub const LOGICALLY_UNREACHABLE: &str = "A section of code was reached that was expected to be logically unreachable.";
+pub const CORE_COMPONENT_CLOBBER: &str = "The core defines multiple components with the same tag or vice versa.";

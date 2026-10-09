@@ -148,4 +148,11 @@ use super::*;
         assert_eq!(deserialized.base, 2);
         assert_eq!(deserialized.cap, 2);
     }
+    
+    #[test]
+    fn bad_deserialize() {
+        let err= ron::from_str::<CappedStat>("a").unwrap_err();
+
+        println!("{err}");
+    }
 }

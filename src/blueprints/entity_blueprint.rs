@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use serde::Deserialize;
 
-use crate::{entities::entity::Entity, errors::{bake_error::BakeError}, mod_registry::{bake::Bake, registry::ModRegistry}};
+use crate::{entities::entity::Entity, errors::{bake_error::BakeError, expect_messages::LOGICALLY_UNREACHABLE}, mod_registry::{bake::Bake, registry::ModRegistry}};
 
 #[derive(Debug, Deserialize)]
 pub struct EntityBlueprint<'a> {
@@ -16,7 +16,7 @@ impl Bake<Entity> for EntityBlueprint<'_> {
         let mut entity = Entity::new();
         for (tag, value) in self.components {
             let component = reg.deserialize_component(tag, value)?;
-            entity.attach(component)?;
+            entity.attach(component).expect(LOGICALLY_UNREACHABLE);
         }
         Ok(entity)
     }

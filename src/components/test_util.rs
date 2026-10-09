@@ -74,6 +74,22 @@ impl ModElement for DuplicateTagComponent {
     const NAME: &'static str = "_stateless_component";
 }
 
+#[derive(Serialize, Deserialize, DynamicHandlers, Debug, Default, ModElement)]
+#[serde(default, rename = "bad serde rename")]
+pub struct BadSerdeRenameComponent {
+    
+}
+
+impl Component for BadSerdeRenameComponent {}
+
+#[derive(Serialize, Deserialize, DynamicHandlers, Debug, Default, ModElement)]
+#[serde(default)]
+pub struct RecursiveComponent {
+    pub rec: Option<Box<RecursiveComponent>>
+}
+
+impl Component for RecursiveComponent {}
+
 #[derive(Default)]
 pub struct TestGetAttributesEvent {
     pub attr1: i32,

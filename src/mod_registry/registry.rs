@@ -23,11 +23,11 @@ impl ModRegistry {
     }
 
     pub fn register_component(&mut self, tag: String, component_entry: ComponentEntry) -> Result<(), RegistryError> {
-        if let Some(tag_first) = self.tags.remove(&component_entry.type_id) {
-            return Err(RegistryError::DuplicateComponentType { type_name: component_entry.type_name, tag_first, tag_second: tag })
+        if let Some(tag_first) = self.tags.get(&component_entry.type_id) {
+            return Err(RegistryError::DuplicateComponentType { type_name: component_entry.type_name, tag_first: tag_first.clone(), tag_second: tag })
         }
-        if let Some(entry_first) = self.components.remove(&tag) {
-            return Err(RegistryError::DuplicateComponentTag { tag, entry_first: Box::new(entry_first), entry_second: Box::new(component_entry) })
+        if let Some(entry_first) = self.components.get(&tag) {
+            return Err(RegistryError::DuplicateComponentTag { tag, type_first: entry_first.type_name.clone(), type_second: component_entry.type_name.clone() })
         }
 
         self.tags.insert(component_entry.type_id, tag.clone());
@@ -108,7 +108,7 @@ fn deserialize_as<C: Component + DeserializeOwned>(v: &ron::value::RawValue)
 mod tests {
     use std::{any::Any, ops::DerefMut};
 
-use crate::components::test_util::{DuplicateTagComponent, TestStatefulComponent, TestStatelessComponent};
+use crate::components::test_util::{DuplicateTagComponent, RecursiveComponent, TestStatefulComponent, TestStatelessComponent};
 
 use super::*;
 
@@ -170,6 +170,22 @@ use super::*;
     }
 
     #[test]
+    fn duplicate_tag_doesnt_corrupt() {
+        let mut reg = ModRegistry::new();
+        let mod_id = "mod_id";
+        let mut ctx = reg.build_context(mod_id);
+
+        ctx.register_component::<TestStatelessComponent>().unwrap();
+        let err = ctx.register_component::<DuplicateTagComponent>().unwrap_err();
+
+        let tag = reg.tags.get(&TypeId::of::<TestStatelessComponent>()).unwrap();
+
+        assert!(reg.components.contains_key(tag));
+
+        println!("{err}");
+    }
+
+    #[test]
     fn ron_error() {
         let mut reg = ModRegistry::new();
         let mod_id = "mod_id";
@@ -206,6 +222,24 @@ use super::*;
         let value: &ron::value::RawValue = ron::from_str("(attr2: 2)").unwrap();
 
         let err = reg.deserialize_component(tag, value).unwrap_err();
+
+        println!("{err}");
+    }
+
+    #[test]
+    fn serialize_ron_error() {
+        let mut reg = ModRegistry::new();
+        let mod_id = "mod_id";
+        let mut ctx = reg.build_context(mod_id);
+
+        ctx.register_component::<RecursiveComponent>().unwrap();
+
+        let mut comp = RecursiveComponent::default();
+        for _i in 0..129 {
+            comp = RecursiveComponent {rec: Some(Box::new(comp))}
+        }
+
+        let err = reg.serialize_component(&comp).unwrap_err();
 
         println!("{err}");
     }

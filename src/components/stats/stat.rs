@@ -99,4 +99,11 @@ mod tests {
 
         assert_eq!(deserialized.base, 1);
     }
+    
+    #[test]
+    fn bad_deserialize() {
+        let err= ron::from_str::<Stat>("a").unwrap_err();
+
+        println!("{err}");
+    }
 }

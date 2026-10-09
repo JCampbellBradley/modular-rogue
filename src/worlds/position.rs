@@ -106,10 +106,17 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
-    fn position_from_delta_err() {
+    fn position_from_delta_err_x() {
         let delta: PositionDelta = (-1, 2).into();
-        let _: Position = delta.try_into().unwrap();
+        let err = TryInto::<Position>::try_into(delta).unwrap_err();
+        println!("{err}")
+    }
+
+    #[test]
+    fn position_from_delta_err_y() {
+        let delta: PositionDelta = (2, -1).into();
+        let err = TryInto::<Position>::try_into(delta).unwrap_err();
+        println!("{err}")
     }
 
     #[test]
@@ -122,10 +129,17 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
-    fn delta_from_position_err() {
+    fn delta_from_position_err_x() {
         let pos: Position = (0, u32::MAX).into();
-        let _: PositionDelta = pos.try_into().unwrap();
+        let err = TryInto::<PositionDelta>::try_into(pos).unwrap_err();
+        println!("{err}")
+    }
+
+    #[test]
+    fn delta_from_position_err_y() {
+        let pos: Position = (u32::MAX, 0).into();
+        let err = TryInto::<PositionDelta>::try_into(pos).unwrap_err();
+        println!("{err}")
     }
 
     #[test]

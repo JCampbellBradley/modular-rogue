@@ -1,14 +1,12 @@
 use thiserror::Error;
 
-use crate::mod_registry::registry::ComponentEntry;
-
 #[derive(Error, Debug)]
 pub enum RegistryError {
-    #[error("The tag `{tag}` was used to register two distinct components: {entry_first:?} and {entry_second:?}")]
+    #[error("The tag {tag} was used to register two distinct components: {type_first:?} and {type_second:?}")]
     DuplicateComponentTag {
         tag: String,
-        entry_first: Box<ComponentEntry>,
-        entry_second: Box<ComponentEntry>
+        type_first: String,
+        type_second: String
     },
     #[error("The component with type {type_name:?} was registered twice, with tags: {tag_first:?} and {tag_second:?}")]
     DuplicateComponentType {
@@ -20,7 +18,7 @@ pub enum RegistryError {
     SerializedUnknownType {
         type_name: String
     },
-    #[error("Tried to deserialize using unknown tag `{tag:?}`")]
+    #[error("Tried to deserialize using unknown tag {tag:?}")]
     DeserializedUnknownTag {
         tag: String
     },
