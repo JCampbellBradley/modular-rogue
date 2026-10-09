@@ -27,5 +27,5 @@ path = "src/main.rs"
 test = false
 
 [workspace]
-members = ["modular-rogue-macros", "sample-mod", "xtask", "tests/mod_fixtures/blank-mod", "tests/mod_fixtures/minimal-mod"]
-default-members = [".", "modular-rogue-macros", "sample-mod", "xtask"]
+members = ["modular-rogue-macros", "xtask", "tests/mod_fixtures/blank-mod", "tests/mod_fixtures/minimal-mod"]
+default-members = [".", "modular-rogue-macros", "xtask"]
