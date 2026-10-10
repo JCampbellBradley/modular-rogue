@@ -19,7 +19,7 @@ impl<T: Registerable + Default + Debug> IncRegistry<T> {
 
 impl<T: Registerable + Debug> IncRegistry<T> {
     pub fn register(&mut self, mut item: T) -> Result<RegistryID, IncRegistryError> {
-        if let Some(_) = item.get_id() {
+        if item.get_id().is_some() {
             return Err(IncRegistryError::Reregistration { item: format!("{item:?}") })
         }
         
