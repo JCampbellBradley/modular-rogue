@@ -62,7 +62,11 @@ impl Registerable for Entity {
     }
 
     fn set_id(&mut self, id: RegistryID) {
-        self.id = Some(id)
+        self.id = Some(id);
+    }
+
+    fn remove_id(&mut self) {
+        self.id = None;
     }
 }
 

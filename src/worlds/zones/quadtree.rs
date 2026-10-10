@@ -110,16 +110,11 @@ impl QuadBranch {
         }
     }
 
-    fn get_node_mut(&mut self, pos: Position) -> Option<&mut Box<dyn QuadNode>> {
+    fn get_node_mut(&mut self, pos: Position) -> Option<&mut dyn QuadNode> {
         match &mut self.subnodes[self.get_subnode_index(pos)] {
-            Some(node) => Some(node),
+            Some(node) => Some(node.as_mut()),
             _ => None
         }
-    }
-
-    fn set_node(&mut self, pos: Position, node: Box<dyn QuadNode>) {
-        let index = self.get_subnode_index(pos);
-        self.subnodes[index] = Some(node);
     }
 
     fn remove_node(&mut self, pos: Position) {
@@ -127,21 +122,16 @@ impl QuadBranch {
         self.subnodes[index] = None;    
     }
 
-    fn get_node_or_create(&mut self, pos: Position) -> Option<&mut Box<dyn QuadNode>> {
-        if self.get_node(pos).is_none() {
-            let (width, height) = self.get_subnode_size(pos);
-            
-            self.set_node(pos, if width == 1 && height == 1 {
+    fn get_node_or_create(&mut self, pos: Position) -> &mut dyn QuadNode {
+        let index = self.get_subnode_index(pos);
+        let (width, height) = self.get_subnode_size(pos);
+        self.subnodes[index].get_or_insert_with(|| {
+            if width == 1 && height == 1 {
                 Box::new(QuadLeaf::new())
             } else {
                 Box::new(QuadBranch::new(width, height))
-            });
-        }
-
-        match &mut self.subnodes[self.get_subnode_index(pos)] {
-            Some(node) => Some(node),
-            _ => None
-        }
+            }
+        }).as_mut()
     }
 }
 
@@ -163,9 +153,8 @@ impl QuadNode for QuadBranch {
     fn put(&mut self, pos: Position, entity: EntityId) {
         let new_pos = self.localize_pos(pos);
 
-        if let Some(node) = self.get_node_or_create(pos) {
-            node.put(new_pos, entity)
-        }
+        let node = self.get_node_or_create(pos);
+        node.put(new_pos, entity)
     }
 
     fn remove(&mut self, pos: Position, entity: EntityId) {
@@ -350,5 +339,10 @@ mod tests {
         tree.remove((8, 8).into(), 3);
         tree.remove((8, 0).into(), 4);
         assert!(tree.root.is_empty());
+    }
+    #[test]
+    fn remove_miss() {
+        let mut tree = QuadTree::new(1, 1);
+        tree.remove((0, 0).into(), 0);
     }
 }

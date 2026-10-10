@@ -5,3 +5,6 @@ pub mod mod_error;
 pub mod registry_error;
 pub mod entity_error;
 pub mod expect_messages;
+pub mod world_error;
+pub mod inc_registry_error;
+pub mod zone_error;

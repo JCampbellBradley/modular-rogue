@@ -1,4 +1,4 @@
-use crate::{components::test_util::{DuplicateTagComponent, TestStatefulComponent, TestStatelessComponent}, errors::registry_error::RegistryError, mod_registry::registry::{ModContext, ModManifest, ModRegistry}};
+use crate::{components::test_util::{DuplicateTagComponent, TestStatefulComponent, TestStatelessComponent}, errors::{expect_messages::TEST_UNREACHABLE, registry_error::RegistryError}, mod_registry::registry::{ModContext, ModManifest, ModRegistry}};
 
 pub const TEST_MANIFEST1: ModManifest = ModManifest {
     mod_id: "test1",
@@ -41,23 +41,17 @@ pub fn register_noop(_ctx: &mut ModContext<'_>) -> Result<(), RegistryError> {
 }
 
 pub fn register_test(ctx: &mut ModContext<'_>) -> Result<(), RegistryError> {
-    ctx.register_component::<TestStatelessComponent>()?;
-
-    Ok(())
+    ctx.register_component::<TestStatelessComponent>()
 }
 
 pub fn register_duplicate_type(ctx: &mut ModContext<'_>) -> Result<(), RegistryError> {
-    ctx.register_component::<TestStatelessComponent>()?;
-    ctx.register_component::<TestStatelessComponent>()?;
-
-    Ok(())
+    ctx.register_component::<TestStatelessComponent>().expect(TEST_UNREACHABLE);
+    ctx.register_component::<TestStatelessComponent>()
 }
 
 pub fn register_duplicate_tag(ctx: &mut ModContext<'_>) -> Result<(), RegistryError> {
-    ctx.register_component::<TestStatelessComponent>()?;
-    ctx.register_component::<DuplicateTagComponent>()?;
-
-    Ok(())
+    ctx.register_component::<TestStatelessComponent>().expect(TEST_UNREACHABLE);
+    ctx.register_component::<DuplicateTagComponent>()
 }
 
 pub fn register_panic(_ctx: &mut ModContext<'_>) -> Result<(), RegistryError> {

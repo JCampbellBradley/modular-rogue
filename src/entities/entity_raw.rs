@@ -48,7 +48,7 @@ impl Unbake<Entity> for EntityRaw {
 mod tests {
     use ron::from_str;
 
-use crate::{components::test_util::{TestStatefulComponent, TestStatelessComponent}, mod_registry::test_util::reg_with_test_components, worlds::registry::Registry};
+use crate::{components::test_util::{TestStatefulComponent, TestStatelessComponent}, mod_registry::test_util::reg_with_test_components, worlds::registry::IncRegistry};
 
 use super::*;
 
@@ -75,7 +75,7 @@ use super::*;
     fn unbake_id() {
         let reg = reg_with_test_components();
 
-        let mut ent_reg: Registry<Entity> = Registry::new();
+        let mut ent_reg: IncRegistry<Entity> = IncRegistry::new();
 
 
         let mut ent = Entity::new();
@@ -83,8 +83,7 @@ use super::*;
         let a = ent.require::<TestStatefulComponent>();
         a.attr1 = 1;
 
-        let id = ent_reg.register(ent);
-
+        let id = ent_reg.register(ent).unwrap();
 
         let raw = EntityRaw::unbake(ent_reg.get(id).unwrap(), &reg).unwrap();
 
